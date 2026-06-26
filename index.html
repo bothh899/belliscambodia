@@ -1522,15 +1522,7 @@ window.showLoginUI = () => {
                                   `✅ <b>ស្ថានភាព:</b> ${orderData.status}`;
 
 // 🔴 បន្ថែមប៊ូតុង (Inline Keyboard) ពីក្រោមសារ Telegram 🔴
-                    let tgPayload = { 
-                        chat_id: CHAT_ID, 
-                        parse_mode: "HTML",
-                        reply_markup: {
-                            inline_keyboard: [
-                                [{ text: "📦 ចាប់ផ្តើមរៀបចំអីវ៉ាន់ (Preparing)", callback_data: `prep_${orderData.orderId}` }]
-                            ]
-                        }
-                    };
+let tgPayload = { chat_id: CHAT_ID, parse_mode: "HTML" };
                     let tgEndpoint = `https://api.telegram.org/bot${BOT_TOKEN}/`;
                     
                     if (orderData.receiptImage && orderData.receiptImage.startsWith('http')) {                        tgEndpoint += 'sendPhoto';
