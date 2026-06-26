@@ -1341,19 +1341,26 @@ window.previewCover = async (event) => {
         else {
             currentOrders.forEach(o => {
 // 🔴 Status មានតែ ២ ដំណាក់កាលប៉ុណ្ណោះ 🔴
-                let color = o.status === 'Pending' ? '#f59e0b' : 'var(--success)';
-                let alertBadge = o.status === 'Pending' ? `<span style="background:var(--danger); color:white; padding:3px 8px; border-radius:30px; font-size:9px; margin-left:8px; font-weight: 800; letter-spacing:0.5px;">NEW</span>` : '';
+        let color = o.status === 'Pending' ? '#f59e0b' : 
+                            (o.status === 'Paid (Pending Verification)' ? '#f59e0b' : 
+                            (o.status.includes('Paid') ? 'var(--success)' : 
+                            (o.status === 'Processing' ? '#3b82f6' : 
+                            (o.status === 'Shipped' ? '#8b5cf6' : 'var(--gray)'))));
+                            
+                let alertBadge = o.status === 'Paid (Pending Verification)' ? `<span style="background:var(--danger); color:white; padding:3px 8px; border-radius:30px; font-size:9px; margin-left:8px; font-weight: 800; letter-spacing:0.5px;">NEW RECEIPT</span>` : '';
 
                 html += `<tr>
                     <td><b style="font-size:14px;">${o.orderId}</b> ${alertBadge}<br><span style="font-size:11px; color:var(--gray)">${o.date}</span></td>
                     <td><b style="font-size:13px;">${o.customer.name}</b><br><span style="font-size:11px; color:var(--gray)">${o.customer.phone}</span></td>
                     <td style="font-weight:600; font-size:14px;">$${o.total.toFixed(2)}</td>
-                    <td>
-                        <select class="status-select" style="color: ${color}; border-color: ${color}50; background: ${color}10; width: 140px;" onchange="window.updateOrderStatus('${o.firebaseId}', this.value)">
-                            <option value="Pending" ${o.status === 'Pending' ? 'selected' : ''} style="color:var(--fg);">Pending</option>
-                            <option value="Preparing & shipping" ${o.status === 'Preparing & shipping' ? 'selected' : ''} style="color:var(--fg);">Preparing & shipping</option>
-                        </select>
-                    </td>
+                    <td><select class="status-select" style="color: ${color}; border-color: ${color}50; background: ${color}10;" onchange="window.updateOrderStatus('${o.firebaseId}', this.value)">
+                            <option value="Pending" ${o.status==='Pending'?'selected':''} style="color:var(--fg);">Pending</option>
+                            <option value="Paid (Pending Verification)" ${o.status==='Paid (Pending Verification)'?'selected':''} style="color:var(--fg);">Paid (Pending Verif.)</option>
+                            <option value="Paid via KHQR (Auto)" ${o.status==='Paid via KHQR (Auto)'?'selected':''} style="color:var(--fg);">Paid via KHQR (Auto)</option>
+                            <option value="Processing" ${o.status==='Processing'?'selected':''} style="color:var(--fg);">Processing</option>
+                            <option value="Shipped" ${o.status==='Shipped'?'selected':''} style="color:var(--fg);">Shipped</option>
+                            <option value="Delivered" ${o.status==='Delivered'?'selected':''} style="color:var(--fg);">Delivered</option>
+                        </select></td>
                 </tr>`;
             });
         }
