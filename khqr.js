@@ -1,5 +1,5 @@
 // ==========================================
-// KHQR MODULE (MANUAL UPLOAD ONLY) - FIXED V7
+// KHQR MODULE (MANUAL UPLOAD ONLY) - BULLETPROOF V8
 // ==========================================
 
 let timerInterval;
@@ -13,7 +13,6 @@ window.startKHQRPayment = async (totalAmount, orderData) => {
 
     if(!amountEl || !qrContainer || !statusEl || !modalEl) return;
 
-    // ប្តូរប្រាក់ដុល្លារទៅរៀល (ឧ. 4100)
     let amountKHR = Math.round(totalAmount * 4100);
     
     amountEl.innerHTML = `
@@ -31,32 +30,32 @@ window.startKHQRPayment = async (totalAmount, orderData) => {
     modalEl.classList.add('active');
 
     try {
-        // ប្រើប្រាស់ BakongKHQR ពី index.html ដោយផ្ទាល់
-        if (typeof BakongKHQR === 'undefined') {
-            throw new Error("ប្រព័ន្ធមិនទាន់ស្គាល់ KHQR ទេ។ សូម Refresh វេបសាយម្តងទៀត!");
-        }
+        // 🔴 ទាញយក Library ផ្ទាល់យ៉ាងលឿនពី JSDelivr ធានាថាដើរ ១០០% ទាំងលើទូរស័ព្ទ និងកុំព្យូទ័រ
+        const tsKhqr = await import('https://cdn.jsdelivr.net/npm/ts-khqr@2.2.3/+esm');
+        const { KHQR, CURRENCY, TAG, COUNTRY } = tsKhqr;
 
         let uniqueBillNumber = "ORD" + Math.floor(100000 + Math.random() * 900000).toString();
 
         const qrData = {
-            tag: "1", 
-            accountID: 'virakboth_vann@bkrt', // 🔴 សូមប្តូរជាលេខគណនីបាគងរបស់លោកអ្នក
-            merchantName: 'VIRAKBOTH VANN', // 🔴 សូមប្តូរជាឈ្មោះរបស់លោកអ្នក
+            tag: TAG.INDIVIDUAL,
+            accountID: 'virakboth_vann@bkrt', // 🔴 លេខគណនីបាគង
+            merchantName: 'VIRAKBOTH VANN',   // 🔴 ឈ្មោះ
             merchantCity: 'Phnom Penh',
-            currency: "KHM", 
-            amount: amountKHR.toString(), 
-            countryCode: "KH",
+            currency: CURRENCY.KHR, 
+            amount: amountKHR, 
+            countryCode: COUNTRY.KH,
             merchantCategoryCode: '5999',
             billNumber: uniqueBillNumber, 
             terminalId: "T001",
             storeId: "IDKSHOP"
         };
 
-        const result = BakongKHQR.generateMerchant(qrData);
+        const result = KHQR.generate(qrData);
 
-        if (!result || !result.data) throw new Error("ការបង្កើតកូដ KHQR បរាជ័យ!");
+        if (result.status.code !== 0) throw new Error(result.status.message);
 
-        let dynamicKHQRString = result.data.qrCode || result.data;
+        let dynamicKHQRString = result.data?.qrCode || result.data?.qr || result.data;
+        if (!dynamicKHQRString) throw new Error("មិនអាចទាញយកកូដ QR បានទេ!");
 
         qrContainer.style.position = "relative";
         new QRCode(qrContainer, {
@@ -66,7 +65,6 @@ window.startKHQRPayment = async (totalAmount, orderData) => {
             correctLevel: QRCode.CorrectLevel.M
         });
         
-        // បន្ថែម Logo បាគងនៅកណ្តាល QR
         const centerLogo = document.createElement('img');
         centerLogo.src = 'logobakong.png';
         centerLogo.style.position = 'absolute';
@@ -82,7 +80,6 @@ window.startKHQRPayment = async (totalAmount, orderData) => {
         
         setTimeout(() => { qrContainer.appendChild(centerLogo); }, 50);
 
-        // 🔴 បង្ហាញផ្ទាំង Upload វិក្កយបត្រភ្លាមៗ ដោយមិនបាច់រង់ចាំ 🔴
         statusEl.innerHTML = `
             <div style="width: 100%; margin-top: 5px; background: #0a0a0a; padding: 12px; border-radius: 12px; border: 1px solid #222;">
                 <p style="font-size: 12px; color: #ffaa00; margin-bottom: 10px; font-weight: bold;">⚠️ សូមថតអេក្រង់ (Screenshot) វិក្កយបត្រ បន្ទាប់ពីវេរលុយរួច</p>
@@ -103,7 +100,6 @@ window.startKHQRPayment = async (totalAmount, orderData) => {
             </div>
         `;
 
-        // មុខងារបង្ហាប់រូបភាព ពេលអតិថិជន Upload
         window.handleReceiptUpload = (event) => {
             const file = event.target.files[0];
             if (file) {
@@ -152,7 +148,6 @@ window.startKHQRPayment = async (totalAmount, orderData) => {
             if(typeof window.saveOrderToFirebase === 'function') window.saveOrderToFirebase(orderData); 
         };
 
-        // រៀបចំម៉ោងរាប់ថយក្រោយ ១០ នាទី
         let timeLeft = 600; 
         if(timerInterval) clearInterval(timerInterval);
         
