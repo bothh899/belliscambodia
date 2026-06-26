@@ -785,21 +785,35 @@
         }
     };
 
-    window.attemptLogin = async () => {
-      const e = document.getElementById('email').value; const p = document.getElementById('password').value;
-      if (e === "admin@idk.com" && p === "123456") {
-        sessionStorage.setItem('idkAdminLoggedIn', 'true');
-        document.getElementById('login-view').style.display = 'none'; document.getElementById('dashboard-view').style.display = 'flex';
-        document.getElementById('err').style.display = 'none'; 
-        await window.loadProducts(); window.loadOrdersAndUsers();
-        window.listenSettings();
-      } else { document.getElementById('err').style.display = 'block'; }
-    };
-    window.logout = () => { sessionStorage.removeItem('idkAdminLoggedIn'); location.reload(); };
+// ត្រូវប្រាកដថាបាន Import `signInWithEmailAndPassword` រួចរាល់នៅផ្នែកខាងលើ
+    import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    const auth = getAuth(app); // ប្រកាស Auth ប្រសិនបើមិនទាន់មាន
 
-    window.switchPanel = (panelId, element) => {
-        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active')); element.classList.add('active');
-        document.querySelectorAll('.panel').forEach(p => p.classList.remove('active')); document.getElementById('panel-' + panelId).classList.add('active');
+    window.attemptLogin = async () => {
+      const e = document.getElementById('email').value; 
+      const p = document.getElementById('password').value;
+      
+      try {
+        // 🔴 Login ចូល Firebase ផ្ទាល់តែម្តង
+        await signInWithEmailAndPassword(auth, e, p);
+        
+        sessionStorage.setItem('idkAdminLoggedIn', 'true');
+        document.getElementById('login-view').style.display = 'none'; 
+        document.getElementById('dashboard-view').style.display = 'flex';
+        document.getElementById('err').style.display = 'none'; 
+        
+        await window.loadProducts(); 
+        window.loadOrdersAndUsers();
+        window.listenSettings();
+      } catch (error) { 
+        document.getElementById('err').style.display = 'block'; 
+      }
+    };
+
+    window.logout = async () => { 
+        await signOut(auth); // 🔴 Sign Out ពី Firebase វិញ
+        sessionStorage.removeItem('idkAdminLoggedIn'); 
+        location.reload(); 
     };
 
     window.switchSettingTab = (secId, element) => {
