@@ -554,10 +554,9 @@
             measurementId: "G-WLNBCYT2MR"
         };
 
-        const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
         const auth = getAuth(app);
-        const googleProvider = new GoogleAuthProvider();
 
         const R2_ACCESS_KEY = "0b1d9091cf7006115464cd341f490a00";
         const R2_SECRET_KEY = "c1da863f908f26c15bd6e9e48fc83bc0bc742b6b518a5f361557e732980eed19";
@@ -722,14 +721,6 @@ onSnapshot(doc(db, "settings", "store_config"), (docSnap) => {
             return { isDiscounted: true, percent: bestDiscount.percent, price: newPrice, originalPrice: basePrice };
         }
 
-        getRedirectResult(auth).then((result) => {
-            if (result !== null) {
-                window.showUIModal('Success ✅', 'You have successfully logged in.', 'Continue', window.closeUIModal);
-            }
-        }).catch((error) => {
-            console.error("Redirect Auth Error:", error);
-            window.showUIModal('Error ❌', 'Login failed or was cancelled.', 'Close', window.closeUIModal);
-        });
 
         onAuthStateChanged(auth, async (user) => {
             currentCustomer = user;
@@ -905,9 +896,7 @@ window.showLoginUI = () => {
             `; 
             let extra = `
                 <button class="ui-modal-btn" onclick="window.processLogin()">Sign In</button>
-                <div class="auth-divider"><span>OR</span></div>
-                <button class="btn-social btn-google" onclick="window.signInWithGoogle()">🌐 Continue with Google</button>
-                <button class="btn-social btn-phone" onclick="window.showPhoneAuthUI(false)">📱 Continue with Phone</button>
+<button class="btn-social btn-google" onclick="window.signInWithGoogle()">🌐 Continue with Google</button>
                 <div style="margin-top:20px; font-size:13px; color:var(--text-muted);">New here? <span style="color:white; cursor:pointer; text-decoration:underline; font-weight:bold;" onclick="window.showSignUpUI()">Create an account</span></div>
             `; 
             window.showUIModal('Log In 👤', body, null, null, extra); 
@@ -925,26 +914,13 @@ window.showLoginUI = () => {
             `; 
             let extra = `
                 <button class="ui-modal-btn" onclick="window.processSignUp()">Create Account</button>
-                <div class="auth-divider"><span>OR</span></div>
-                <button class="btn-social btn-google" onclick="window.signInWithGoogle()">🌐 Sign up with Google</button>
-                <button class="btn-social btn-phone" onclick="window.showPhoneAuthUI(true)">📱 Sign up with Phone</button>
+<button class="btn-social btn-phone" onclick="window.showPhoneAuthUI(true)">📱 Sign up with Phone</button>
                 <div style="margin-top:20px; font-size:13px; color:var(--text-muted);">Already have an account? <span style="color:white; cursor:pointer; text-decoration:underline; font-weight:bold;" onclick="window.showLoginUI()">Log In</span></div>
             `; 
             window.showUIModal('Sign Up 👤', body, null, null, extra); 
         }
 
-        window.signInWithGoogle = () => {
-            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-            if (isMobile) {
-                signInWithRedirect(auth, googleProvider);
-            } else {
-                signInWithPopup(auth, googleProvider).then((result) => {
-                    window.showUIModal('Success ✅', 'Logged in successfully with Google.', 'Continue', window.closeUIModal);
-                }).catch((error) => {
-                    console.error(error); alert("Google Sign-In failed.");
-                });
-            }
-        }
+
 
         // ==========================================
         // 🔴 មុខងារថ្មី៖ Login/Sign Up តាមលេខទូរស័ព្ទ (គ្មាន OTP) 🔴
