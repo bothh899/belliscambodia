@@ -3,12 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>IDK - Dark Minimalist Store</title>
+    <title>IDK</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/khqr-sdk/khqr.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link rel="icon" type="image/png" href="favicon.png">
     <style>
         :root { --bg-color: #0a0a0a; --surface-color: #121212; --border-color: #222222; --text-main: #ffffff; --text-muted: #888888; --accent: #ffffff; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
@@ -61,9 +62,16 @@
         .page.active { display: block; animation: fadeIn 0.4s ease; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .hero { position: relative; width: 100%; height: auto; display: flex; justify-content: center; overflow: hidden; background: #000; }
-        .hero-img { width: 100%; height: auto; display: block; opacity: 0.75; }
+.hero { position: relative; width: 100%; background: #000; overflow: hidden; }
+        .hero-slider { display: flex; width: 100%; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+        .hero-slider::-webkit-scrollbar { display: none; }
+        .hero-slide { flex: 0 0 100%; width: 100%; object-fit: cover; scroll-snap-align: start; opacity: 0.85; }
         
+        /* ចំណុចអុចៗនៅខាងក្រោម Banner */
+        .hero-dots { position: absolute; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 10;}
+        .hero-dots .dot { width: 6px; height: 6px; background: rgba(255,255,255,0.4); border-radius: 50%; transition: 0.3s; }
+        .hero-dots .dot.active { background: white; width: 20px; border-radius: 4px; }
+
         .new-arrivals { padding: 40px 50px; max-width: 1400px; margin: 0 auto;}
         .section-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 20px; border-bottom: 1px solid #1a1a1a; padding-bottom: 10px; }
         
@@ -200,6 +208,20 @@
         .s-tag:hover { background: #333; color: white; border-color: #555; }
         .search-subtitle { font-size: 14px; font-weight: 600; margin-bottom: 15px; color: #888; text-transform: uppercase; letter-spacing: 1px;}
 
+        /* 🔴 CSS សម្រាប់ផ្ទាំងទូទាត់ KHQR 🔴 */
+        .khqr-modal-box { background: var(--surface-color); border: 1px solid #333; width: 90%; max-width: 360px; padding: 25px 20px; border-radius: 16px; text-align: center; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.8); }
+        .khqr-modal-box::-webkit-scrollbar { display: none; }
+        .khqr-logo { width: 120px; margin-bottom: 12px; }
+        #qrcode-container { background: white; padding: 12px; border-radius: 12px; display: inline-block; margin-bottom: 15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        
+        .khqr-amount-wrap { background: rgba(255, 68, 68, 0.1); border: 1px solid rgba(255, 68, 68, 0.2); border-radius: 10px; padding: 15px; margin-bottom: 15px; display: flex; flex-direction: row; align-items: center; justify-content: center; gap: 20px; }        .khqr-amount { font-size: 28px; font-weight: 900; color: #ff4444; line-height: 1; }
+        .khqr-amount-khr { font-size: 14px; color: #ffaa00; font-weight: 700; letter-spacing: 0.5px; }
+        
+        .khqr-timer { font-size: 13px; color: #ffaa00; font-weight: bold; margin-bottom: 15px; background: rgba(255,170,0,0.1); padding: 8px 15px; border-radius: 30px; display: inline-block; border: 1px solid rgba(255,170,0,0.2); }
+        .khqr-status { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 10px;}
+        .spinner { width: 16px; height: 16px; border: 2px solid var(--text-muted); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         .fullscreen-modal { display: none; position: fixed; z-index: 99999; left: 0; top: 0; width: 100vw; height: 100vh; background-color: rgba(0, 0, 0, 0.95); align-items: center; justify-content: center; cursor: zoom-out; backdrop-filter: blur(5px);}
         .fullscreen-modal.active { display: flex; animation: fadeIn 0.3s; }
         .fullscreen-modal-content { position: relative; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; padding: 20px; }
@@ -240,19 +262,6 @@
         .btn-phone { background: transparent; color: #fff; border: 1px solid #333; }
         .btn-phone:hover { border-color: #fff; background: rgba(255,255,255,0.05); }
 
-        /* 🔴 CSS សម្រាប់ផ្ទាំងទូទាត់ KHQR 🔴 */
-        .khqr-modal-box { background: var(--surface-color); border: 1px solid #333; width: 90%; max-width: 350px; padding: 30px; border-radius: 12px; text-align: center; }
-        .khqr-logo { width: 120px; margin-bottom: 15px; }
-        #qrcode-container { background: white; padding: 15px; border-radius: 8px; display: inline-block; margin-bottom: 15px; transition: 0.3s; }
-        .khqr-amount { font-size: 24px; font-weight: 800; color: #ff4444; margin-bottom: 5px; }
-        
-        /* 🔴 រចនាប័ទ្មសម្រាប់ម៉ោងរាប់ថយក្រោយ 🔴 */
-        .khqr-timer { font-size: 14px; color: #ffaa00; font-weight: bold; margin-bottom: 15px; background: rgba(255,170,0,0.1); padding: 8px; border-radius: 6px; display: none; }
-        
-        .khqr-status { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 15px;}
-        .spinner { width: 16px; height: 16px; border: 2px solid var(--text-muted); border-top-color: white; border-radius: 50%; animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
         @media (max-width: 992px) { .product-grid { grid-template-columns: repeat(2, 1fr); } .detail-container { grid-template-columns: 1fr; } }
         @media (max-width: 600px) {
             .navbar { padding: 15px 20px; } .nav-links { display: none; } 
@@ -281,6 +290,16 @@
             .promo-modal-box { padding: 30px 20px; }
             .promo-title { font-size: 20px; }
             .promo-btn { padding: 12px 30px; }
+
+            /* 🔴 CSS សម្រាប់ផ្ទាំង Order History 🔴 */
+        .history-card { background: #151515; border: 1px solid #2a2a2a; border-radius: 8px; padding: 18px; margin-bottom: 15px; }
+        .history-header { display: flex; justify-content: space-between; border-bottom: 1px dashed #333; padding-bottom: 12px; margin-bottom: 12px; align-items: flex-start;}
+        .history-id { font-weight: 900; color: white; font-size: 15px; letter-spacing: 0.5px;}
+        .history-date { font-size: 11px; color: #888; margin-top: 4px;}
+        .history-status { font-size: 11px; font-weight: 800; padding: 5px 10px; border-radius: 4px; background: rgba(255,255,255,0.1); color: #ccc; text-transform: uppercase;}
+        .history-item { display: flex; justify-content: space-between; font-size: 13px; color: #ccc; margin-bottom: 8px; }
+        .history-total { display: flex; justify-content: space-between; font-weight: 900; color: white; margin-top: 12px; border-top: 1px dashed #333; padding-top: 12px; font-size: 15px;}
+
         }
     </style>
 </head>
@@ -295,15 +314,14 @@
         </div>
     </div>
 
-    <div id="khqr-modal" class="ui-modal-overlay">
+<div id="khqr-modal" class="ui-modal-overlay">
         <div class="khqr-modal-box">
             <div class="ui-modal-close" onclick="window.cancelKHQR()">✕</div>
-            <img src="https://bakong.nbc.gov.kh/images/logo.svg" class="khqr-logo" alt="KHQR Logo">
-            <h3 style="margin-bottom: 5px;">Scan to Pay</h3>
-            <div class="khqr-amount" id="khqr-total-amount">$0.00</div>
+            
+            <div class="khqr-amount-wrap" id="khqr-total-amount"></div>
             
             <div class="khqr-timer" id="khqr-timer">
-                ⏳ ម៉ោងទូទាត់ <span id="khqr-timer-text">03:00</span>
+                ⏳ ម៉ោងទូទាត់ <span id="khqr-timer-text">10:00</span>
             </div>
             
             <div id="qrcode-container"></div>
@@ -375,10 +393,16 @@
         </div>
     </div>
 
-    <main id="page-home" class="page active">
-        <section class="hero"><img src="Cover.png" class="hero-img"></section>
+<main id="page-home" class="page active">
+<section class="hero">
+            <div class="hero-slider" id="main-hero-slider">
+                </div>
+            <div class="hero-dots" id="main-hero-dots">
+                </div>
+        </section>
+        
         <section class="new-arrivals" id="arrivals-section">
-            <div class="section-header"><h2>NEW ARRIVALS</h2><a class="view-all" onclick="window.scrollToArrivals()">View All Collection ⟶</a></div>
+                        <div class="section-header"><h2>NEW ARRIVALS</h2><a class="view-all" onclick="window.scrollToArrivals()">View All Collection ⟶</a></div>
             
             <div class="product-grid" id="product-grid">
                 <div style="grid-column: 1/-1; display: flex; align-items: center; justify-content: center; height: 250px;">
@@ -487,6 +511,25 @@
         </div>
     </main>
 
+    <main id="page-profile" class="page">
+        <div class="checkout-page-wrapper">
+            <h2 class="checkout-header"><span>👤</span> My Account</h2>
+            
+     <div class="summary-box" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <div>
+                    <p id="profile-status-text" style="color: var(--text-muted); font-size: 12px; text-transform: uppercase; margin-bottom: 4px;">Logged in as</p>
+                    <p id="profile-identity" style="font-size: 16px; font-weight: bold; color: white;">User</p>
+                </div>
+                <button id="btn-profile-action" onclick="window.processLogout()" style="background: #ff4444; color: white; padding: 12px 20px; border-radius: 6px; font-weight: 800; font-size: 12px; border: none; cursor: pointer; transition: 0.2s;">LOG OUT</button>
+            </div>
+
+            <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px; text-transform: uppercase; letter-spacing: 1px;">📦 Order History</h3>
+            
+            <div id="order-history-list">
+                </div>
+        </div>
+    </main>
+
     <div id="fs-modal" class="fullscreen-modal" onclick="window.closeFullscreen(event)">
         <div class="close-fs">✕</div>
         <div class="fullscreen-modal-content">
@@ -494,12 +537,12 @@
         </div>
     </div>
 
-    <script src="khqr.js"></script>
-
+<script src="khqr.js?v=5"></script>
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence, query, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, addDoc, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence, query, limit, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";     
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signInWithRedirect, getRedirectResult, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";        import { S3Client, PutObjectCommand } from "https://cdn.jsdelivr.net/npm/@aws-sdk/client-s3/+esm";
+        import { RecaptchaVerifier, signInWithPhoneNumber } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyCcyKbP1X1E3BUnuMmZiB9ycg0sanFs4jg",
@@ -516,6 +559,28 @@
         const auth = getAuth(app);
         const googleProvider = new GoogleAuthProvider();
 
+        const R2_ACCESS_KEY = "0b1d9091cf7006115464cd341f490a00";
+        const R2_SECRET_KEY = "c1da863f908f26c15bd6e9e48fc83bc0bc742b6b518a5f361557e732980eed19";
+        const R2_ENDPOINT = "https://16e1f7ba5668898f977a6c6f273c12b8.r2.cloudflarestorage.com";
+        const R2_BUCKET_NAME = "idk-shop-images";
+        const R2_PUBLIC_URL = "https://pub-c627bcd786664e8da58b5efda6cbad61.r2.dev";
+
+        const s3Client = new S3Client({
+            region: "auto",
+            endpoint: R2_ENDPOINT,
+            forcePathStyle: true,
+            credentials: { accessKeyId: R2_ACCESS_KEY, secretAccessKey: R2_SECRET_KEY }
+        });
+
+        async function uploadFileToR2(file) {
+            const cleanFileName = "receipt_" + Date.now() + ".jpg";
+            const arrayBuffer = await file.arrayBuffer();
+            const fileData = new Uint8Array(arrayBuffer);
+            const command = new PutObjectCommand({ Bucket: R2_BUCKET_NAME, Key: cleanFileName, Body: fileData, ContentType: file.type });
+            await s3Client.send(command); 
+            return `${R2_PUBLIC_URL}/${cleanFileName}`;
+        }
+
         enableIndexedDbPersistence(db).catch((err) => {
             if (err.code == 'failed-precondition') { console.warn("Multiple tabs open, persistence disabled."); } 
             else if (err.code == 'unimplemented') { console.warn("Browser does not support offline persistence."); }
@@ -524,10 +589,26 @@
         let productsDB = []; 
         let cartCount = 0;
         let cartItems = JSON.parse(localStorage.getItem('idk_cart')) || []; 
-        let currentItem = { id: '', title: '', price: 0, sizes: [], size: '', qty: 1, imgUrl: '' };
+        
+        cartItems = cartItems.map(item => {
+            if (!item.selectedSizes || item.selectedSizes.length !== item.qty) {
+                item.selectedSizes = Array(item.qty).fill(item.size || (item.sizes && item.sizes[0]) || 'M');
+            }
+            return item;
+        });
+        let currentItem = { id: '', title: '', price: 0, sizes: [], selectedSizes: [], size: '', qty: 1, imgUrl: '' };
         
         let currentImageArray = [];
         let currentImageIndex = 0;
+
+        window.updateIndividualSize = (index, subIndex, newSize) => { 
+            if(cartItems[index] && cartItems[index].selectedSizes) {
+                cartItems[index].selectedSizes[subIndex] = newSize; 
+                window.saveCartLocally(); 
+                window.refreshCartUI(); 
+            }
+        }
+
         let currentCustomer = null; 
         let userFavorites = [];
         let hasShownTooltip = localStorage.getItem('idk_tooltip_shown') === 'true';
@@ -548,12 +629,23 @@
             document.getElementById('promo-modal').classList.remove('active');
             if(promoTimeout) clearTimeout(promoTimeout);
         };
-
-        onSnapshot(doc(db, "settings", "store_config"), (docSnap) => {
+onSnapshot(doc(db, "settings", "store_config"), (docSnap) => {
             if (docSnap.exists()) {
                 const data = docSnap.data();
                 
                 deliveryFee = data.deliveryFee || 0;
+
+// 🔴 ទាញយករូប Cover មកបង្ហាញ 🔴
+                if(data.heroBanners !== undefined) {
+                    if(typeof window.renderDynamicBanners === 'function') {
+                        window.renderDynamicBanners(data.heroBanners);
+                    }
+                } else {
+                    // បើទើបបង្កើត Store ថ្មី មិនទាន់មាន Data ទាល់តែសោះ
+                    if(typeof window.renderDynamicBanners === 'function') {
+                        window.renderDynamicBanners(['Cover.png', 'Cover2.png']); 
+                    }
+                }
                 
                 if (data.announcements && data.announcements.length > 0) {
                     let now = new Date();
@@ -792,24 +884,22 @@
             }
         }
 
-        window.handleUser = (event) => { 
+window.handleUser = (event) => { 
             if(event) event.preventDefault(); 
-            if(currentCustomer) { 
-                let identity = currentCustomer.email || currentCustomer.phoneNumber || 'User';
-                let html = `<p style="margin-bottom:20px; font-size:16px;"><b>${identity}</b></p>`; 
-                window.showUIModal('My Account 👤', html, 'Log Out', window.processLogout); 
-            } else { 
-                window.showLoginUI(); 
-            } 
+            // មិនបាច់បង្ខំឱ្យ Login ទេ គឺបើកផ្ទាំង Profile អោយចូលមើលប្រវត្តិទិញ (Guest Tracking) តែម្តង
+            window.showPage('profile', null); 
         }
 
-        window.showLoginUI = () => { 
+
+
+window.showLoginUI = () => { 
             let body = `
                 <div style="text-align:left; margin-top:20px;">
                     <label class="form-label" style="color:white;">Email</label>
                     <input type="email" id="auth-email" class="ui-search-input" style="margin-bottom:15px; text-align:left; padding-left:15px;" placeholder="Enter email">
                     <label class="form-label" style="color:white;">Password</label>
-                    <input type="password" id="auth-password" class="ui-search-input" style="margin-bottom:10px; text-align:left; padding-left:15px;" placeholder="Enter password">
+<input type="password" id="auth-password" class="ui-search-input" ... placeholder="Enter password">
+
                     <div id="auth-error" style="color:#ff4444; font-size:12px; margin-bottom:10px; display:none;"></div>
                 </div>
             `; 
@@ -817,7 +907,7 @@
                 <button class="ui-modal-btn" onclick="window.processLogin()">Sign In</button>
                 <div class="auth-divider"><span>OR</span></div>
                 <button class="btn-social btn-google" onclick="window.signInWithGoogle()">🌐 Continue with Google</button>
-                <button class="btn-social btn-phone" onclick="window.showPhoneAuthUI()">📱 Continue with Phone</button>
+                <button class="btn-social btn-phone" onclick="window.showPhoneAuthUI(false)">📱 Continue with Phone</button>
                 <div style="margin-top:20px; font-size:13px; color:var(--text-muted);">New here? <span style="color:white; cursor:pointer; text-decoration:underline; font-weight:bold;" onclick="window.showSignUpUI()">Create an account</span></div>
             `; 
             window.showUIModal('Log In 👤', body, null, null, extra); 
@@ -837,7 +927,7 @@
                 <button class="ui-modal-btn" onclick="window.processSignUp()">Create Account</button>
                 <div class="auth-divider"><span>OR</span></div>
                 <button class="btn-social btn-google" onclick="window.signInWithGoogle()">🌐 Sign up with Google</button>
-                <button class="btn-social btn-phone" onclick="window.showPhoneAuthUI()">📱 Sign up with Phone</button>
+                <button class="btn-social btn-phone" onclick="window.showPhoneAuthUI(true)">📱 Sign up with Phone</button>
                 <div style="margin-top:20px; font-size:13px; color:var(--text-muted);">Already have an account? <span style="color:white; cursor:pointer; text-decoration:underline; font-weight:bold;" onclick="window.showLoginUI()">Log In</span></div>
             `; 
             window.showUIModal('Sign Up 👤', body, null, null, extra); 
@@ -856,7 +946,17 @@
             }
         }
 
-        window.showPhoneAuthUI = () => {
+        // ==========================================
+        // 🔴 មុខងារថ្មី៖ Login/Sign Up តាមលេខទូរស័ព្ទ (គ្មាន OTP) 🔴
+        // ==========================================
+        window.showPhoneAuthUI = (isSignUp = false) => {
+            let title = isSignUp ? 'Phone Sign Up 📱' : 'Phone Login 📱';
+            let btnText = isSignUp ? 'Create Account' : 'Sign In';
+            let action = isSignUp ? 'window.processPhoneSignUp()' : 'window.processPhoneLogin()';
+            let toggleText = isSignUp 
+                ? 'Already have an account? <span style="color:white; cursor:pointer; text-decoration:underline; font-weight:bold;" onclick="window.showPhoneAuthUI(false)">Log In</span>' 
+                : 'New here? <span style="color:white; cursor:pointer; text-decoration:underline; font-weight:bold;" onclick="window.showPhoneAuthUI(true)">Create an account</span>';
+
             let body = `
                 <div style="text-align:left; margin-top:20px;">
                     <label class="form-label" style="color:white;">Phone Number</label>
@@ -865,73 +965,74 @@
                             <option value="+855">🇰🇭 +855</option>
                             <option value="+66">🇹🇭 +66</option>
                             <option value="+84">🇻🇳 +84</option>
-                            <option value="+1">🇺🇸 +1</option>
                         </select>
                         <input type="tel" id="auth-phone" class="ui-search-input" style="width: 65%; text-align:left; padding-left:15px; margin-bottom: 0;" placeholder="12 345 678">
                     </div>
-                    <div id="recaptcha-container" style="margin-bottom:15px; display:flex; justify-content:center;"></div>
+                    <label class="form-label" style="color:white;">Password</label>
+                    <input type="password" id="auth-phone-password" class="ui-search-input" style="margin-bottom:10px; text-align:left; padding-left:15px;" placeholder="${isSignUp ? 'Create password (min 6 chars)' : 'Enter password'}">
                     <div id="auth-error" style="color:#ff4444; font-size:12px; margin-bottom:10px; display:none;"></div>
                 </div>
             `;
             let extra = `
-                <button class="ui-modal-btn" onclick="window.sendOTP()">Send OTP</button>
+                <button class="ui-modal-btn" onclick="${action}">${btnText}</button>
+                <div style="margin-top:20px; font-size:13px; color:var(--text-muted); text-align:center;">${toggleText}</div>
+                <div class="auth-divider"><span>OR</span></div>
                 <button class="ui-modal-btn outline" onclick="window.showLoginUI()">Back to Email</button>
             `;
-            window.showUIModal('Phone Login 📱', body, null, null, extra);
-
-            if(window.recaptchaVerifier) { window.recaptchaVerifier.clear(); }
-            window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', { 'size': 'normal' });
-            window.recaptchaVerifier.render();
+            window.showUIModal(title, body, null, null, extra);
         }
 
-        window.sendOTP = () => {
+        window.processPhoneLogin = async () => {
             const countryCode = document.getElementById('country-code').value;
             let rawPhone = document.getElementById('auth-phone').value.trim();
+            const p = document.getElementById('auth-phone-password').value;
             const errBox = document.getElementById('auth-error');
-            
-            if(!rawPhone) { errBox.innerText = "Please enter phone number."; errBox.style.display="block"; return; }
+
+            if(!rawPhone || !p) { errBox.innerText = "សូមបំពេញលេខទូរស័ព្ទ និងលេខសម្ងាត់។"; errBox.style.display="block"; return; }
             if (rawPhone.startsWith('0')) { rawPhone = rawPhone.substring(1); }
-            const phoneNumber = countryCode + rawPhone;
             
-            signInWithPhoneNumber(auth, phoneNumber, window.recaptchaVerifier).then((confirmationResult) => {
-                window.confirmationResult = confirmationResult;
-                window.showOTPInputUI();
-            }).catch((error) => {
-                errBox.innerText = "Error sending OTP. Make sure the number is correct."; errBox.style.display="block";
-                console.error(error);
-            });
+            // បំប្លែងទៅជា Email ដើម្បីប្រើប្រាស់មុខងារ Login ធម្មតា
+            const fakeEmail = `${countryCode.replace('+','')}${rawPhone}@idkshop.phone`;
+
+            try { 
+                await signInWithEmailAndPassword(auth, fakeEmail, p); 
+                window.showUIModal('Success ✅', 'អ្នកបានចូលគណនីដោយជោគជ័យ។', 'Continue', window.closeUIModal); 
+            } catch(err) { 
+                errBox.innerText = "លេខទូរស័ព្ទ ឬលេខសម្ងាត់មិនត្រឹមត្រូវ។"; errBox.style.display = "block"; 
+            }
         }
 
-        window.showOTPInputUI = () => {
-            let body = `
-                <div style="text-align:left; margin-top:20px;">
-                    <label class="form-label" style="color:white;">Enter 6-digit OTP Code</label>
-                    <input type="text" id="auth-otp" class="ui-search-input" style="margin-bottom:15px; text-align:center; letter-spacing:5px; font-weight:bold;" placeholder="------">
-                    <div id="auth-error" style="color:#ff4444; font-size:12px; margin-bottom:10px; display:none;"></div>
-                </div>
-            `;
-            let extra = `
-                <button class="ui-modal-btn" onclick="window.verifyOTP()">Verify & Login</button>
-                <button class="ui-modal-btn outline" onclick="window.showPhoneAuthUI()">Back</button>
-            `;
-            window.showUIModal('Verify OTP 💬', body, null, null, extra);
-        }
-
-        window.verifyOTP = () => {
-            const code = document.getElementById('auth-otp').value.trim();
+        window.processPhoneSignUp = async () => {
+            const countryCode = document.getElementById('country-code').value;
+            let rawPhone = document.getElementById('auth-phone').value.trim();
+            const p = document.getElementById('auth-phone-password').value;
             const errBox = document.getElementById('auth-error');
-            if(!code) { errBox.innerText = "Please enter OTP code."; errBox.style.display="block"; return; }
-            
-            window.confirmationResult.confirm(code).then((result) => {
-                window.showUIModal('Success ✅', 'You have successfully logged in.', 'Continue', window.closeUIModal);
-            }).catch((error) => {
-                errBox.innerText = "Invalid OTP code."; errBox.style.display="block";
-            });
+
+            if(!rawPhone || !p) { errBox.innerText = "សូមបំពេញលេខទូរស័ព្ទ និងលេខសម្ងាត់។"; errBox.style.display="block"; return; }
+            if(p.length < 6) { errBox.innerText = "លេខសម្ងាត់ត្រូវមានយ៉ាងហោចណាស់ ៦ ខ្ទង់។"; errBox.style.display="block"; return; }
+            if (rawPhone.startsWith('0')) { rawPhone = rawPhone.substring(1); }
+
+            const fakeEmail = `${countryCode.replace('+','')}${rawPhone}@idkshop.phone`;
+
+            try { 
+                await createUserWithEmailAndPassword(auth, fakeEmail, p); 
+                window.showUIModal('Welcome! 🎉', 'គណនីរបស់អ្នកត្រូវបានបង្កើត។', 'Continue', window.closeUIModal); 
+            } catch(err) { 
+                errBox.innerText = "លេខទូរស័ព្ទនេះមានគេប្រើរួចហើយ។"; errBox.style.display = "block"; 
+            }
         }
 
         window.processLogin = async () => { const e = document.getElementById('auth-email').value; const p = document.getElementById('auth-password').value; const errBox = document.getElementById('auth-error'); if(!e || !p) { errBox.innerText = "Please fill all fields."; errBox.style.display = "block"; return; } try { await signInWithEmailAndPassword(auth, e, p); window.showUIModal('Success ✅', 'You have successfully logged in.', 'Continue', window.closeUIModal); } catch(err) { errBox.innerText = "Invalid email or password."; errBox.style.display = "block"; } }
+        
         window.processSignUp = async () => { const e = document.getElementById('auth-email').value; const p = document.getElementById('auth-password').value; const errBox = document.getElementById('auth-error'); if(!e || !p) { errBox.innerText = "Please fill all fields."; errBox.style.display = "block"; return; } if(p.length < 6) { errBox.innerText = "Password must be at least 6 characters."; errBox.style.display = "block"; return; } try { await createUserWithEmailAndPassword(auth, e, p); window.showUIModal('Welcome! 🎉', 'Your account has been created.', 'Continue', window.closeUIModal); } catch(err) { errBox.innerText = "Error creating account. Email might be in use."; errBox.style.display = "block"; } }
-        window.processLogout = async () => { await signOut(auth); window.closeUIModal(); }
+        
+        window.processLogout = async () => { 
+            await signOut(auth); 
+            window.closeUIModal(); 
+            if(document.getElementById('page-profile').classList.contains('active')) {
+                window.showPage('home', null);
+            }
+        }
 
         window.syncDetailButtonState = () => {
             const detailBtn = document.getElementById('detail-add-btn');
@@ -975,7 +1076,11 @@
             if(existingIndex > -1) {
                 cartItems.splice(existingIndex, 1);
             } else {
-                cartItems.push({ id: p.id, title: p.title, price: Number(p.price), sizes: p.sizes, size: p.sizes[0], qty: 1, imgUrl: p.imgUrl });
+                let defaultSize = p.sizes[0] || 'M';
+                cartItems.push({ 
+                    id: p.id, title: p.title, price: Number(p.price), sizes: p.sizes, 
+                    size: defaultSize, selectedSizes: [defaultSize], qty: 1, imgUrl: p.imgUrl 
+                });
                 window.triggerTooltip();
             }
             window.updateCartBadge();
@@ -987,7 +1092,11 @@
             if(existingIndex > -1) {
                 cartItems.splice(existingIndex, 1);
             } else {
-                cartItems.push({ ...currentItem });
+                let defaultSize = currentItem.sizes[0] || 'M';
+                cartItems.push({ 
+                    ...currentItem, 
+                    selectedSizes: Array(currentItem.qty).fill(defaultSize) 
+                });
                 window.triggerTooltip();
             }
             window.updateCartBadge();
@@ -997,7 +1106,11 @@
             if(event) event.preventDefault();
             let existingIndex = cartItems.findIndex(item => item.id === currentItem.id);
             if(existingIndex === -1) {
-                cartItems.push({ ...currentItem });
+                let defaultSize = currentItem.sizes[0] || 'M';
+                cartItems.push({ 
+                    ...currentItem, 
+                    selectedSizes: Array(currentItem.qty).fill(defaultSize) 
+                });
                 window.updateCartBadge();
             }
             window.updateCheckoutUI();
@@ -1020,31 +1133,51 @@
             cartItems.forEach((item, index) => {
                 const dInfo = window.getDiscountInfo(item.id, item.price);
                 const activePrice = dInfo.price;
-                
                 let itemTotal = activePrice * item.qty; 
-                let sizeOptions = item.sizes.map(s => `<option value="${s}" ${s === item.size ? 'selected' : ''}>${s}</option>`).join('');
                 
                 let priceDisplay = dInfo.isDiscounted 
                     ? `<span style="color:white;">$${itemTotal.toFixed(2)}</span> <span class="original-price" style="font-size: 11px;">$${(item.price * item.qty).toFixed(2)}</span>`
                     : `<span style="color:white;">$${itemTotal.toFixed(2)}</span>`;
 
+                let sizeSelectorsHtml = '';
+                for (let k = 0; k < item.qty; k++) {
+                    let currentSize = item.selectedSizes[k];
+                    let options = item.sizes.map(s => `<option value="${s}" ${s === currentSize ? 'selected' : ''}>Size ${s}</option>`).join('');
+                    sizeSelectorsHtml += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <span style="font-size: 13px; color: #aaa;">Size អាវទី ${k + 1}:</span>
+                            <select class="modal-size-select" style="padding: 6px 10px; font-size: 13px; border-color: #333; background: #0a0a0a; border-radius: 6px; cursor: pointer;" onchange="window.updateIndividualSize(${index}, ${k}, this.value)">
+                                ${options}
+                            </select>
+                        </div>
+                    `;
+                }
+
                 listHtml += `
-                    <div class="checkout-item-row">
-                        <img src="${item.imgUrl}" class="checkout-item-img">
-                        <div class="checkout-item-details">
-                            <span class="checkout-item-title">${item.title}</span>
-                            <div class="modal-cart-controls" style="margin-top: 5px;">
-                                <select class="modal-size-select" onchange="window.updateModalSize(${index}, this.value)">${sizeOptions}</select>
-                                <div class="modal-qty-box">
+                    <div class="checkout-item-row" style="flex-direction: column; align-items: stretch; border-bottom: 1px solid #222; padding-bottom: 20px;">
+                        <div style="display: flex; gap: 15px;">
+                            <img src="${item.imgUrl}" class="checkout-item-img">
+                            <div style="display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <span class="checkout-item-title" style="font-size: 15px;">${item.title}</span>
+                                    <span class="modal-remove-btn" onclick="window.removeModalItem(${index})">✕ Remove</span>
+                                </div>
+                                <span class="checkout-price-wrap" style="align-items: flex-start;">${priceDisplay}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #151515; border: 1px solid #2a2a2a; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 1px dashed #333; padding-bottom: 12px;">
+                                <span style="font-size: 13px; color: #ccc;">ចំនួនអាវ (QTY)</span>
+                                <div class="modal-qty-box" style="background: #000; border-color: #333;">
                                     <button class="modal-qty-btn" onclick="window.changeModalQty(${index}, -1)">−</button>
-                                    <span class="modal-qty-num">${item.qty}</span>
+                                    <span class="modal-qty-num" style="font-size: 14px; font-weight: bold; width: 30px; text-align: center;">${item.qty}</span>
                                     <button class="modal-qty-btn" onclick="window.changeModalQty(${index}, 1)">+</button>
                                 </div>
                             </div>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; height: 100%;">
-                            <span class="modal-remove-btn" onclick="window.removeModalItem(${index})">✕ Remove</span>
-                            <span class="checkout-price-wrap">${priceDisplay}</span>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                ${sizeSelectorsHtml}
+                            </div>
                         </div>
                     </div>`;
             });
@@ -1052,12 +1185,29 @@
             return listHtml;
         }
 
-        window.updateModalSize = (index, newSize) => { cartItems[index].size = newSize; window.saveCartLocally(); window.refreshCartUI(); }
+        window.updateIndividualSize = (index, subIndex, newSize) => { 
+            cartItems[index].selectedSizes[subIndex] = newSize; 
+            window.saveCartLocally(); 
+            window.refreshCartUI(); 
+        }
+        
         window.changeModalQty = (index, amount) => {
-            let newQty = cartItems[index].qty + amount; if(newQty < 1) return; 
-            cartItems[index].qty = newQty; window.updateCartBadge();
+            let item = cartItems[index];
+            let newQty = item.qty + amount; 
+            if(newQty < 1) return; 
+            item.qty = newQty;
+            
+            if (amount > 0) {
+                let lastSize = item.selectedSizes[item.selectedSizes.length - 1] || item.sizes[0];
+                item.selectedSizes.push(lastSize);
+            } else {
+                item.selectedSizes.pop(); 
+            }
+            
+            window.updateCartBadge();
             window.refreshCartUI();
         }
+
         window.removeModalItem = (index) => {
             cartItems.splice(index, 1); window.updateCartBadge();
             if(cartItems.length === 0) { 
@@ -1081,12 +1231,117 @@
 
         window.scrollToArrivals = () => { window.scrollTo({ top: document.getElementById('arrivals-section').offsetTop - 80, behavior: 'smooth' }); }
         
-        window.showPage = (pageId, event) => {
+  window.showPage = (pageId, event) => {
             if(event) event.preventDefault();
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('page-' + pageId).classList.add('active');
             if (pageId !== 'detail') { window.savePageLocally(pageId); }
             if (pageId !== 'detail') window.scrollTo(0, 0); 
+            
+            // បើទំព័រដែលបើកជា profile ឱ្យវាហៅកូដទាញប្រវត្តិទិញខាងក្រោមមកដំណើរការ
+            if (pageId === 'profile' && window.fetchOrderHistory) {
+                window.fetchOrderHistory();
+            }
+        }
+
+        // 🔴 ៤. កូដថ្មីស្រឡាង៖ មុខងារទាញទិន្នន័យប្រវត្តិទិញពី Database 🔴
+// 🔴 ៤. កូដថ្មីស្រឡាង៖ មុខងារទាញទិន្នន័យប្រវត្តិទិញពី Database 🔴
+        window.fetchOrderHistory = async () => {
+            const listEl = document.getElementById('order-history-list');
+            const identityEl = document.getElementById('profile-identity');
+            const statusTextEl = document.getElementById('profile-status-text');
+            const actionBtn = document.getElementById('btn-profile-action');
+            
+            listEl.innerHTML = '<div class="spinner" style="margin: 30px auto; border-top-color: #4caf50;"></div> <p style="text-align:center; color:#888; font-size:13px;">កំពុងទាញយកប្រវត្តិ...</p>';
+            
+            try {
+                let orders = [];
+
+                if (currentCustomer) {
+                    // 🟢 ក. សម្រាប់អតិថិជនដែលបាន Login រួច
+                    const identity = currentCustomer.email || currentCustomer.phoneNumber;
+                    statusTextEl.innerText = "LOGGED IN AS";
+                    identityEl.innerText = identity;
+                    
+                    if(actionBtn) {
+                        actionBtn.innerText = "LOG OUT";
+                        actionBtn.style.background = "#ff4444";
+                        actionBtn.onclick = window.processLogout;
+                    }
+
+                    const q = query(collection(db, "orders"), where("customer.email", "==", identity));
+                    const querySnapshot = await getDocs(q);
+                    querySnapshot.forEach((doc) => { orders.push({ id: doc.id, ...doc.data() }); });
+                } else {
+                    // 🟡 ខ. សម្រាប់ភ្ញៀវអត់ Login (Guest Tracking)
+                    statusTextEl.innerText = "TRACKING AS";
+                    identityEl.innerText = "Guest User";
+                    
+                    if(actionBtn) {
+                        actionBtn.innerText = "LOG IN / SIGN UP";
+                        actionBtn.style.background = "#4caf50";
+                        actionBtn.onclick = () => { window.showLoginUI(); };
+                    }
+
+                    // ទាញកូដវិក្កយបត្រពីទូរស័ព្ទដៃរបស់គាត់មកសួរ Database
+                    let guestOrderIds = JSON.parse(localStorage.getItem('idk_guest_orders') || '[]');
+                    if (guestOrderIds.length > 0) {
+                        // បំបែកសួរម្តង ១០ វិក្កយបត្រ (ច្បាប់របស់ Firebase)
+                        const chunks = [];
+                        for (let i = 0; i < guestOrderIds.length; i += 10) {
+                            chunks.push(guestOrderIds.slice(i, i + 10));
+                        }
+                        for (let chunk of chunks) {
+                            const q = query(collection(db, "orders"), where("orderId", "in", chunk));
+                            const querySnapshot = await getDocs(q);
+                            querySnapshot.forEach((doc) => { orders.push({ id: doc.id, ...doc.data() }); });
+                        }
+                    }
+                }
+                
+                // តម្រៀបពីថ្មីទៅចាស់ (ទិញថ្មីៗបង្ហាញលើគេ)
+                orders.sort((a, b) => b.timestamp - a.timestamp);
+                
+                if(orders.length === 0) {
+                    let emptyMsg = currentCustomer ? "មិនទាន់មានប្រវត្តិទិញទំនិញនៅឡើយទេ!" : "មិនទាន់មានប្រវត្តិទិញទំនិញទេ។ <br><br>សូម Login ដើម្បីមើលប្រវត្តិដែលទិញតាមទូរស័ព្ទផ្សេង។";
+                    listEl.innerHTML = `<div style="text-align: center; padding: 40px 20px; background: #111; border-radius: 8px; border: 1px dashed #333;"><span style="font-size: 30px; display:block; margin-bottom:10px;">🛍️</span><span style="color: #888; font-size:13px;">${emptyMsg}</span></div>`;
+                    return;
+                }
+                
+                let html = '';
+                orders.forEach(o => {
+                    let statusColor = "rgba(255,255,255,0.05)";
+                    let statusText = o.status;
+                    
+                    // លេងពណ៌ស្ថានភាពអីវ៉ាន់
+                    if(o.status.includes('Paid')) { statusColor = "rgba(76, 175, 80, 0.1)"; statusText = `<span style="color:#4caf50;">${o.status}</span>`; }
+                    else if(o.status.includes('Pending')) { statusColor = "rgba(255, 170, 0, 0.1)"; statusText = `<span style="color:#ffaa00;">${o.status}</span>`; }
+                    else if(o.status.includes('Shipped')) { statusColor = "rgba(0, 191, 255, 0.1)"; statusText = `<span style="color:#00bfff;">${o.status}</span>`; }
+                    
+                    let itemsHtml = o.items.map(i => `<div class="history-item"><span>${i.qty}x ${i.title} (${i.size})</span><span style="color:white;">$${(i.price * i.qty).toFixed(2)}</span></div>`).join('');
+                    
+                    html += `
+                        <div class="history-card">
+                            <div class="history-header">
+                                <div>
+                                    <div class="history-id">${o.orderId}</div>
+                                    <div class="history-date">${o.date}</div>
+                                </div>
+                                <div class="history-status" style="background: ${statusColor};">${statusText}</div>
+                            </div>
+                            <div style="margin-bottom: 15px;">${itemsHtml}</div>
+                            <div class="history-total">
+                                <span>សរុប (រួមទាំងសេវាដឹក):</span>
+                                <span style="color: #4caf50;">$${o.total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                listEl.innerHTML = html;
+            } catch (error) {
+                console.error("Error fetching orders:", error);
+                listEl.innerHTML = '<div style="color: #ff4444; text-align: center; padding: 20px;">មានបញ្ហាក្នុងការទាញយកទិន្នន័យ។ ប្រសិនបើលោកអ្នកកំពុងតេស្ត សូមប្រាកដថាបានថែមពាក្យ where ក្នុង import រួចរាល់។</div>';
+            }
         }
 
         window.updateDetailPrice = () => {
@@ -1144,32 +1399,52 @@
             cartItems.forEach((item, index) => {
                 const dInfo = window.getDiscountInfo(item.id, item.price);
                 const activePrice = dInfo.price;
-                
                 let itemTotal = activePrice * item.qty; 
                 subtotal += itemTotal;
-                let sizeOptions = item.sizes.map(s => `<option value="${s}" ${s === item.size ? 'selected' : ''}>${s}</option>`).join('');
                 
                 let priceDisplay = dInfo.isDiscounted 
                     ? `<span style="color:white;">$${itemTotal.toFixed(2)}</span> <span class="original-price" style="font-size: 11px;">$${(item.price * item.qty).toFixed(2)}</span>`
                     : `<span style="color:white;">$${itemTotal.toFixed(2)}</span>`;
 
+                let sizeSelectorsHtml = '';
+                for (let k = 0; k < item.qty; k++) {
+                    let currentSize = item.selectedSizes[k];
+                    let options = item.sizes.map(s => `<option value="${s}" ${s === currentSize ? 'selected' : ''}>Size ${s}</option>`).join('');
+                    sizeSelectorsHtml += `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <span style="font-size: 13px; color: #aaa;">Size អាវទី ${k + 1}:</span>
+                            <select class="modal-size-select" style="padding: 6px 10px; font-size: 13px; border-color: #333; background: #0a0a0a; border-radius: 6px; cursor: pointer;" onchange="window.updateIndividualSize(${index}, ${k}, this.value)">
+                                ${options}
+                            </select>
+                        </div>
+                    `;
+                }
+
                 checkoutItemsHtml += `
-                    <div class="checkout-item-row">
-                        <img src="${item.imgUrl}" class="checkout-item-img">
-                        <div class="checkout-item-details">
-                            <span class="checkout-item-title">${item.title}</span>
-                            <div class="modal-cart-controls" style="margin-top: 5px;">
-                                <select class="modal-size-select" onchange="window.updateModalSize(${index}, this.value)">${sizeOptions}</select>
-                                <div class="modal-qty-box">
+                    <div class="checkout-item-row" style="flex-direction: column; align-items: stretch; border-bottom: 1px solid #222; padding-bottom: 20px;">
+                        <div style="display: flex; gap: 15px;">
+                            <img src="${item.imgUrl}" class="checkout-item-img">
+                            <div style="display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                                    <span class="checkout-item-title" style="font-size: 15px;">${item.title}</span>
+                                    <span class="modal-remove-btn" onclick="window.removeModalItem(${index})">✕ Remove</span>
+                                </div>
+                                <span class="checkout-price-wrap" style="align-items: flex-start;">${priceDisplay}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="background: #151515; border: 1px solid #2a2a2a; border-radius: 8px; padding: 15px; margin-top: 15px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 1px dashed #333; padding-bottom: 12px;">
+                                <span style="font-size: 13px; color: #ccc;">ចំនួនអាវ (QTY)</span>
+                                <div class="modal-qty-box" style="background: #000; border-color: #333;">
                                     <button class="modal-qty-btn" onclick="window.changeModalQty(${index}, -1)">−</button>
-                                    <span class="modal-qty-num">${item.qty}</span>
+                                    <span class="modal-qty-num" style="font-size: 14px; font-weight: bold; width: 30px; text-align: center;">${item.qty}</span>
                                     <button class="modal-qty-btn" onclick="window.changeModalQty(${index}, 1)">+</button>
                                 </div>
                             </div>
-                        </div>
-                        <div style="display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; height: 100%;">
-                            <span class="modal-remove-btn" onclick="window.removeModalItem(${index})">✕ Remove</span>
-                            <span class="checkout-price-wrap">${priceDisplay}</span>
+                            <div style="display: flex; flex-direction: column; gap: 10px;">
+                                ${sizeSelectorsHtml}
+                            </div>
                         </div>
                     </div>`;
             });
@@ -1193,23 +1468,95 @@
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
                     coordInput.value = `${lat},${lng}`;
-                    status.innerHTML = `✅ ចាប់ទីតាំងបានជោគជ័យ! <a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" style="color: #4caf50; text-decoration: underline;">View Map</a>`;
-                    status.style.color = "#4caf50";
-                }, () => {
+                    status.innerHTML = `✅ ចាប់ទីតាំងបានជោគជ័យ! <a href="https://www.google.com/maps?q=${lat},${lng}" target="_blank" style="color: #4caf50; text-decoration: underline;">View Map</a>`;                }, () => {
                     status.innerText = "មិនអាចចាប់ទីតាំងបានទេ សូមពិនិត្យមើល Permission";
                     status.style.color = "#ff4a4a";
                 });
             }
         };
 
-        // 🔴 អនុគមន៍សម្រាប់ Save Order ចូល Firebase ក្រោយពេលបង់លុយតាមបាគងរួច 🔴
-      // 🔴 អនុគមន៍សម្រាប់ Save Order ចូល Firebase និងលោត Pop Up វិក្កយបត្រ 🔴
+        // 🔴 អនុគមន៍សម្រាប់ Save Order (Update ពិសេសមាន Telegram Alert) 🔴
         window.saveOrderToFirebase = async (orderData) => {
             try {
-                orderData.status = "Paid via KHQR"; 
-                await addDoc(collection(db, "orders"), orderData);
+                if (orderData.receiptImage && orderData.receiptImage.startsWith('data:image')) {
+                    console.log("Uploading receipt to Cloudflare R2...");
+                    const response = await fetch(orderData.receiptImage);
+                    const blob = await response.blob();
+                    const file = new File([blob], "receipt_" + Date.now() + ".jpg", { type: "image/jpeg" });
+                    
+                    const r2Url = await uploadFileToR2(file);
+                    orderData.receiptImage = r2Url; 
+                }
+
+          if (!orderData.status || orderData.status === "Pending") {
+                    orderData.status = "Paid via KHQR (Auto)"; 
+                }
                 
-                // រៀបចំទម្រង់វិក្កយបត្រ (Invoice HTML)
+                await addDoc(collection(db, "orders"), orderData);
+
+                // 🔴 រក្សាទុកកូដបញ្ជាទិញក្នុងទូរស័ព្ទភ្ញៀវ (សម្រាប់ Guest Tracking) 🔴
+                let guestOrders = JSON.parse(localStorage.getItem('idk_guest_orders') || '[]');
+                if (!guestOrders.includes(orderData.orderId)) {
+                    guestOrders.push(orderData.orderId);
+                    localStorage.setItem('idk_guest_orders', JSON.stringify(guestOrders));
+                }
+
+                // 🔴 បាញ់សារ (Alert) ចូល Telegram Group 🔴
+
+                // 🔴 បាញ់សារ (Alert) ចូល Telegram Group 🔴
+                try {
+                    const BOT_TOKEN = "8862983985:AAF-zbj6y5MwbH0HyFbWwh2jdd10BswtUAc"; 
+                    const CHAT_ID = "-1003710259151";
+                    
+                    let itemsText = orderData.items.map(i => `▫️ ${i.title} (Size: ${i.size}) <b>x${i.qty}</b>`).join('\n');
+                    
+                    let tgMessage = `🚨 <b>ការកុម្ម៉ង់ថ្មី (New Order)</b> 🚨\n\n` +
+                                  `🧾 <b>លេខកូដ:</b> #${orderData.orderId}\n` +
+                                  `👤 <b>អតិថិជន:</b> ${orderData.customer.name}\n` +
+                                  `📞 <b>ទូរស័ព្ទ:</b> <code>${orderData.customer.phone}</code>\n` +
+                                  `📍 <b>ទីតាំង:</b> ${orderData.customer.address}\n` +
+                                  `📝 <b>ចំណាំ:</b> ${orderData.customer.note || 'គ្មាន'}\n\n` +
+                                  `🛍️ <b>ទំនិញដែលទិញ:</b>\n${itemsText}\n\n` +
+                                  `🚚 <b>សេវាដឹក:</b> $${deliveryFee.toFixed(2)}\n` +
+                                  `💰 <b>សរុប:</b> <b>$${orderData.total.toFixed(2)}</b>\n` +
+                                  `✅ <b>ស្ថានភាព:</b> ${orderData.status}`;
+
+// 🔴 បន្ថែមប៊ូតុង (Inline Keyboard) ពីក្រោមសារ Telegram 🔴
+                    let tgPayload = { 
+                        chat_id: CHAT_ID, 
+                        parse_mode: "HTML",
+                        reply_markup: {
+                            inline_keyboard: [
+                                [{ text: "📦 ចាប់ផ្តើមរៀបចំអីវ៉ាន់ (Preparing)", callback_data: `prep_${orderData.orderId}` }]
+                            ]
+                        }
+                    };
+                    let tgEndpoint = `https://api.telegram.org/bot${BOT_TOKEN}/`;
+                    
+                    if (orderData.receiptImage && orderData.receiptImage.startsWith('http')) {                        tgEndpoint += 'sendPhoto';
+                        tgPayload.photo = orderData.receiptImage;
+                        tgPayload.caption = tgMessage;
+                    } else {
+                        tgEndpoint += 'sendMessage';
+                        tgPayload.text = tgMessage;
+                    }
+
+                    fetch(tgEndpoint, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(tgPayload)
+                    }).then(res => console.log("Telegram alert sent!"));
+                } catch(tgErr) {
+                    console.log("Telegram Error:", tgErr);
+                }
+                
+                const successSound = new Audio('https://assets.mixkit.co/active_storage/sfx/2013/2013-preview.mp3');
+                successSound.play().catch(e => console.log("Sound muted by browser"));
+
+                if (typeof confetti === 'function') {
+                    confetti({ particleCount: 150, spread: 80, origin: { y: 0.5 }, zIndex: 9999999 });
+                }
+
                 let itemsHtml = orderData.items.map(item => `
                     <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; border-bottom: 1px dashed #333; padding-bottom: 8px;">
                         <div style="text-align: left; width: 70%; color: #ccc;">
@@ -1224,7 +1571,7 @@
 
                 let invoiceHtml = `
                     <div style="background: #0f0f0f; padding: 20px; border-radius: 8px; margin-top: 15px; border: 1px solid #222; text-align: left;">
-                        <h3 style="text-align: center; color: white; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px;">Receipt</h3>
+                        <h3 style="text-align: center; color: white; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 2px;">✅ E-Receipt</h3>
                         <div style="font-size: 12px; color: #888; margin-bottom: 15px; line-height: 1.8;">
                             <div><b>Order ID:</b> <span style="color: white;">${orderData.orderId}</span></div>
                             <div><b>Date:</b> <span style="color: white;">${orderData.date}</span></div>
@@ -1247,12 +1594,11 @@
                 `;
 
                 setTimeout(() => {
-                    if(typeof window.cancelKHQR === 'function') window.cancelKHQR(); // បិទផ្ទាំង QR
+                    if(typeof window.cancelKHQR === 'function') window.cancelKHQR(); 
                     
-                    // លោត Pop Up បង្ហាញវិក្កយបត្រ
                     window.showUIModal(
                         'Payment Successful! 🎉', 
-                        '<span style="color: #888;">ការទូទាត់របស់អ្នកទទួលបានជោគជ័យ។ សូមអរគុណ!</span>', 
+                        '<span style="color: #4caf50; font-weight:bold;">ការទូទាត់ជោគជ័យ! ការបញ្ជាទិញរបស់អ្នកត្រូវបានបញ្ជូន។</span>', 
                         'Back to Home', 
                         () => { 
                             window.closeUIModal(); 
@@ -1266,13 +1612,15 @@
                             document.getElementById('location-status').innerText = "";
                             window.showPage('home', null); 
                         },
-                        invoiceHtml // បញ្ចូលកូដវិក្កយបត្រទៅក្នុង Pop up
+                        invoiceHtml 
                     );
-                }, 1000); 
-            } catch (error) { console.error("Error saving order:", error); }
-        }
+                }, 1500); 
+            } catch (error) { 
+                console.error("Error saving order:", error); 
+                alert("Payment successful, but there was an error saving the receipt. Please contact support.");
+            }
+        };
 
-        // 🔴 មុខងារចុចប៊ូតុង PAY WITH KHQR 🔴
         window.processPurchase = async () => {
             if(cartItems.length === 0) return window.showUIModal('Error', 'Your cart is empty!', 'OK', window.closeUIModal);
             
@@ -1285,14 +1633,21 @@
             if(!name || !phone || !address) return window.showUIModal('Missing Info', 'សូមបំពេញឈ្មោះ លេខទូរស័ព្ទ និងអាសយដ្ឋាន!', 'OK', window.closeUIModal);
             
             let finalAddress = address;
-            if(coords) finalAddress += ` | Maps: https://maps.google.com/?q=${coords}`;
-
+            if(coords) finalAddress += ` | Maps: https://www.google.com/maps?q=${coords}`;
             let subtotal = 0;
-            let finalItems = cartItems.map(item => {
+            let finalItems = [];
+            
+            cartItems.forEach(item => {
                 const dInfo = window.getDiscountInfo(item.id, item.price);
                 const activePrice = dInfo.price;
                 subtotal += activePrice * item.qty;
-                return { title: item.title, size: item.size, qty: item.qty, price: activePrice };
+                
+                let sizeCounts = {};
+                item.selectedSizes.forEach(s => { sizeCounts[s] = (sizeCounts[s] || 0) + 1; });
+                
+                Object.keys(sizeCounts).forEach(s => {
+                    finalItems.push({ title: item.title, size: s, qty: sizeCounts[s], price: activePrice });
+                });
             });
 
             const orderID = "ORD-" + Math.floor(1000 + Math.random() * 9000);
@@ -1306,16 +1661,15 @@
                 items: finalItems 
             };
 
-            // ហៅកូដដែលនៅក្នុង khqr.js ឱ្យធ្វើការបង្ហាញ QR 
             if(typeof window.startKHQRPayment === 'function') {
                 window.startKHQRPayment(subtotal + deliveryFee, orderData);
             } else {
                 console.error("រកមិនឃើញ File khqr.js ទេ!");
                 alert("ប្រព័ន្ធទូទាត់កំពុងមានបញ្ហា សូមព្យាយាមម្តងទៀតពេលក្រោយ។");
             }
-        }
+        };
 
-        function listenToProducts() {
+function listenToProducts() {
             if (unsub) { unsub(); } 
             const q = query(collection(db, "products"), limit(homeDisplayCount));
             
@@ -1326,11 +1680,15 @@
                     let finalSizes = data.inventory ? Object.keys(data.inventory) : (data.sizes || ["One Size"]); 
                     let coverImg = (data.images && data.images.length > 0) ? data.images[0] : (data.img || 'https://via.placeholder.com/300'); 
                     let allImages = data.images || [coverImg]; 
-                    tempProducts.push({ id: doc.id, title: data.title, price: data.price, description: data.description || "Premium item.", sizes: finalSizes, imgUrl: coverImg, imagesArray: allImages });
+                    // 🔴 ថែម orderIndex ទាញពី Firebase 🔴
+                    tempProducts.push({ id: doc.id, title: data.title, price: data.price, description: data.description || "Premium item.", sizes: finalSizes, imgUrl: coverImg, imagesArray: allImages, orderIndex: data.orderIndex || 0 });
                 });
                 
+                // 🔴 តម្រៀបទំនិញតាមលំដាប់ OrderIndex ដែល Admin បានកំណត់ 🔴
+                tempProducts.sort((a, b) => a.orderIndex - b.orderIndex);
+                
                 productsDB = tempProducts;
-                window.updateCartBadge(); 
+                window.updateCartBadge();
                 
                 if(!window.pageRestored) {
                     const savedPage = localStorage.getItem('idk_currentPage') || 'home';
@@ -1361,6 +1719,76 @@
         }
 
         listenToProducts();
+
+        // ==========================================
+        // 🔴 មុខងារ Slider សម្រាប់ Hero Banner 🔴
+        // ==========================================
+      // ==========================================
+        // 🔴 មុខងារ Slider ទាញរូបពី Firebase 🔴
+        // ==========================================
+        let slideInterval;
+        
+     window.renderDynamicBanners = (banners) => {
+            const sliderEl = document.getElementById('main-hero-slider');
+            const dotsEl = document.getElementById('main-hero-dots');
+            const heroSection = document.querySelector('.hero');
+            if(!sliderEl || !dotsEl || !heroSection) return;
+            
+            // បើ Admin លុបរូប Cover ចោលអស់ គឺលាក់ផ្ទាំងនេះពីវេបសាយភ្ញៀវតែម្តង
+            if(banners.length === 0) {
+                heroSection.style.display = 'none';
+                clearInterval(slideInterval);
+                return;
+            }
+            
+            heroSection.style.display = 'block'; // បង្ហាញមកវិញបើមានរូប
+            
+            // 1. បញ្ចូលរូបភាពទៅក្នុង HTML
+            
+            // 1. បញ្ចូលរូបភាពទៅក្នុង HTML
+            sliderEl.innerHTML = banners.map((url, i) => `<img src="${url}" class="hero-slide" alt="Cover ${i+1}">`).join('');
+            
+            // 2. បញ្ចូលចំណុចអុចៗ
+            dotsEl.innerHTML = banners.map((_, i) => `<span class="dot ${i===0 ? 'active' : ''}"></span>`).join('');
+            
+            // 3. រៀបចំមុខងារលោតអូតូ
+            const dots = dotsEl.querySelectorAll('.dot');
+            let currentSlide = 0;
+            const totalSlides = banners.length;
+            
+            clearInterval(slideInterval); // បិទម៉ោងចាស់សិនការពារកុំឱ្យលោតជាន់គ្នា
+            
+            if(totalSlides <= 1) return; // បើមានរូបតែ ១ មិនបាច់ឱ្យលោតទេ
+            
+            const updateDots = (index) => {
+                dots.forEach(d => d.classList.remove('active'));
+                if(dots[index]) dots[index].classList.add('active');
+            };
+
+            const goToNextSlide = () => {
+                currentSlide++;
+                if (currentSlide >= totalSlides) currentSlide = 0;
+                sliderEl.scrollTo({ left: currentSlide * sliderEl.clientWidth, behavior: 'smooth' });
+                updateDots(currentSlide);
+            };
+
+            const startSlider = () => { slideInterval = setInterval(goToNextSlide, 3000); };
+            const stopSlider = () => { clearInterval(slideInterval); };
+
+            startSlider();
+            
+            sliderEl.addEventListener('touchstart', stopSlider);
+            sliderEl.addEventListener('touchend', () => {
+                setTimeout(() => {
+                    currentSlide = Math.round(sliderEl.scrollLeft / sliderEl.clientWidth);
+                    updateDots(currentSlide);
+                    startSlider();
+                }, 400); 
+            });
+        };
+
+      
+
     </script>
 </body>
 </html>
