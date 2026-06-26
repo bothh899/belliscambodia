@@ -889,14 +889,14 @@ window.showLoginUI = () => {
                     <label class="form-label" style="color:white;">Email</label>
                     <input type="email" id="auth-email" class="ui-search-input" style="margin-bottom:15px; text-align:left; padding-left:15px;" placeholder="Enter email">
                     <label class="form-label" style="color:white;">Password</label>
-<input type="password" id="auth-password" class="ui-search-input" ... placeholder="Enter password">
-
+                    <input type="password" id="auth-password" class="ui-search-input" style="margin-bottom:10px; text-align:left; padding-left:15px;" placeholder="Enter password">
                     <div id="auth-error" style="color:#ff4444; font-size:12px; margin-bottom:10px; display:none;"></div>
                 </div>
-            `; 
-            let extra = `
+            `;
+let extra = `
                 <button class="ui-modal-btn" onclick="window.processLogin()">Sign In</button>
-<button class="btn-social btn-google" onclick="window.signInWithGoogle()">🌐 Continue with Google</button>
+                <div class="auth-divider"><span>OR</span></div>
+                <button class="btn-social btn-phone" onclick="window.showPhoneAuthUI(false)">📱 Continue with Phone</button>
                 <div style="margin-top:20px; font-size:13px; color:var(--text-muted);">New here? <span style="color:white; cursor:pointer; text-decoration:underline; font-weight:bold;" onclick="window.showSignUpUI()">Create an account</span></div>
             `; 
             window.showUIModal('Log In 👤', body, null, null, extra); 
@@ -912,11 +912,12 @@ window.showLoginUI = () => {
                     <div id="auth-error" style="color:#ff4444; font-size:12px; margin-bottom:10px; display:none;"></div>
                 </div>
             `; 
-            let extra = `
+ let extra = `
                 <button class="ui-modal-btn" onclick="window.processSignUp()">Create Account</button>
-<button class="btn-social btn-phone" onclick="window.showPhoneAuthUI(true)">📱 Sign up with Phone</button>
+                <div class="auth-divider"><span>OR</span></div>
+                <button class="btn-social btn-phone" onclick="window.showPhoneAuthUI(true)">📱 Sign up with Phone</button>
                 <div style="margin-top:20px; font-size:13px; color:var(--text-muted);">Already have an account? <span style="color:white; cursor:pointer; text-decoration:underline; font-weight:bold;" onclick="window.showLoginUI()">Log In</span></div>
-            `; 
+            `;
             window.showUIModal('Sign Up 👤', body, null, null, extra); 
         }
 
