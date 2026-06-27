@@ -847,12 +847,20 @@ import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc, g
         window.generateGridHtml = (productsToRender) => {
             if(productsToRender.length === 0) return '<div style="grid-column: 1/-1; padding: 20px; text-align: center; color: var(--text-muted);">No items found.</div>';
             return productsToRender.map(p => {
-                const isAdded = cartItems.some(item => item.id === p.id);
-                const btnText = isAdded ? "✅ ADDED TO BAG" : "👜 ADD TO BAG";
-                const btnClass = isAdded ? "p-btn btn-add-quick added" : "p-btn btn-add-quick";
+const isAdded = cartItems.some(item => item.id === p.id);
+                const isOut = p.isOutOfStock === true; // ឆែកមើលថា Admin បិទស្តុកអត់
+                
+                let btnText = isAdded ? "✅ ADDED TO BAG" : "👜 ADD TO BAG";
+                if (isOut) btnText = "🚫 OUT OF STOCK"; 
+                
+                let btnClass = isAdded ? "p-btn btn-add-quick added" : "p-btn btn-add-quick";
+                if (isOut) btnClass = "p-btn btn-add-quick"; 
+                
+                let actionClick = isOut ? "event.stopPropagation();" : `window.quickAdd('${p.id}', this, event)`;
+                let btnStyle = isOut ? "background: #333; color: #888; cursor: not-allowed;" : "";
                 
                 const dInfo = window.getDiscountInfo(p.id, p.price);
-                const badgeHtml = dInfo.isDiscounted ? `<div class="discount-badge">-${dInfo.percent}% OFF</div>` : '';
+                                const badgeHtml = dInfo.isDiscounted ? `<div class="discount-badge">-${dInfo.percent}% OFF</div>` : '';
                 const priceHtml = dInfo.isDiscounted 
                     ? `<div class="price-wrap"><span class="product-price" style="color:#ff4444;">$${dInfo.price.toFixed(2)}</span><span class="original-price">$${p.price.toFixed(2)}</span></div>`
                     : `<span class="product-price">$${p.price.toFixed(2)}</span>`;
@@ -872,7 +880,7 @@ import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc, updateDoc, g
                                 ${priceHtml}
                             </div>
                             <div class="product-actions">
-                                <button class="${btnClass}" onclick="window.quickAdd('${p.id}', this, event)">${btnText}</button>
+<button class="${btnClass}" style="${btnStyle}" onclick="${actionClick}">${btnText}</button>
                                 <button class="p-btn btn-view" onclick="window.closeSearch(); window.openProduct('${p.id}')">👁️ VIEW ITEM</button>
                             </div>
                         </div>
@@ -1099,9 +1107,26 @@ let extra = `
             }
         }
 
-        window.syncDetailButtonState = () => {
+   window.syncDetailButtonState = () => {
             const detailBtn = document.getElementById('detail-add-btn');
             if(!detailBtn) return;
+            
+            const isOut = currentItem.isOutOfStock === true;
+            if (isOut) {
+                detailBtn.innerHTML = "🚫 OUT OF STOCK";
+                detailBtn.style.background = "#333";
+                detailBtn.style.color = "#888";
+                detailBtn.style.borderColor = "#333";
+                detailBtn.style.cursor = "not-allowed";
+                detailBtn.onclick = (e) => e.preventDefault();
+                document.querySelector('.btn-checkout').style.display = 'none'; // លាក់ប៊ូតុង Checkout
+                return;
+            } else {
+                detailBtn.style = ""; // Clear ពណ៌ចោល
+                document.querySelector('.btn-checkout').style.display = 'flex'; // បង្ហាញវិញ
+                detailBtn.onclick = window.toggleDetailCart;
+            }
+
             const isAdded = cartItems.some(item => item.id === currentItem.id);
             if(isAdded) {
                 detailBtn.innerHTML = "✅ ADDED TO BAG";

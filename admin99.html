@@ -548,14 +548,22 @@
               <div class="form-group"><label class="form-label">Price ($)</label><input type="number" id="p-price" class="input-clean"></div>
               <div class="form-group"><label class="form-label">Description</label><textarea id="p-desc" class="input-clean"></textarea></div>
               <div class="form-group">
-                <label class="form-label">Available Sizes & Stock</label>
-                <div class="size-stock-container">
-                    <div class="size-row"><label class="size-checkbox"><input type="checkbox" id="size-S-check" onchange="window.toggleStockInput('S')"> S</label><input type="number" id="stock-S" class="stock-input" disabled></div>
-                    <div class="size-row"><label class="size-checkbox"><input type="checkbox" id="size-M-check" onchange="window.toggleStockInput('M')"> M</label><input type="number" id="stock-M" class="stock-input" disabled></div>
-                    <div class="size-row"><label class="size-checkbox"><input type="checkbox" id="size-L-check" onchange="window.toggleStockInput('L')"> L</label><input type="number" id="stock-L" class="stock-input" disabled></div>
-                    <div class="size-row"><label class="size-checkbox"><input type="checkbox" id="size-XL-check" onchange="window.toggleStockInput('XL')"> XL</label><input type="number" id="stock-XL" class="stock-input" disabled></div>
-                    <div class="size-row" style="grid-column: 1 / -1;"><label class="size-checkbox" style="width: 100px;"><input type="checkbox" id="size-FS-check" onchange="window.toggleStockInput('FS')"> Free Size</label><input type="number" id="stock-FS" class="stock-input" disabled></div>
+            <div class="form-group">
+                <label class="form-label">Available Sizes (ជ្រើសរើស Size)</label>
+                <div class="size-stock-container" style="display: flex; flex-wrap: wrap; gap: 15px;">
+                    <label class="size-checkbox" style="background: var(--bg); padding: 8px 15px; border: 1px solid var(--border); border-radius: 8px; width: auto;"><input type="checkbox" id="size-S-check"> S</label>
+                    <label class="size-checkbox" style="background: var(--bg); padding: 8px 15px; border: 1px solid var(--border); border-radius: 8px; width: auto;"><input type="checkbox" id="size-M-check"> M</label>
+                    <label class="size-checkbox" style="background: var(--bg); padding: 8px 15px; border: 1px solid var(--border); border-radius: 8px; width: auto;"><input type="checkbox" id="size-L-check"> L</label>
+                    <label class="size-checkbox" style="background: var(--bg); padding: 8px 15px; border: 1px solid var(--border); border-radius: 8px; width: auto;"><input type="checkbox" id="size-XL-check"> XL</label>
+                    <label class="size-checkbox" style="background: var(--bg); padding: 8px 15px; border: 1px solid var(--border); border-radius: 8px; width: auto;"><input type="checkbox" id="size-FS-check"> Free Size</label>
                 </div>
+              </div>
+              <div class="form-group" style="margin-top: 20px;">
+                <label class="form-label">Product Status (ស្ថានភាពទំនិញ)</label>
+                <label class="size-checkbox" style="background: rgba(239, 68, 68, 0.1); padding: 10px 15px; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; width: 100%; color: #ff4444; cursor: pointer;">
+                    <input type="checkbox" id="p-outofstock" style="accent-color: #ff4444;"> 🔴 Mark as "Out of Stock" (បិទមិនឲ្យទិញ)
+                </label>
+              </div>
               </div>
             </div>
             <div>
@@ -1307,21 +1315,17 @@ if (currentConfig.bannerRatioDesktop) document.getElementById('cfg-banner-ratio-
     window.openAddForm = () => { window.resetForm(); document.getElementById('form-mode-title').innerText = "Add New Product"; document.getElementById('product-form').style.display = 'block'; };
     window.closeForm = () => { document.getElementById('product-form').style.display = 'none'; };
     
-    window.resetForm = () => {
+ window.resetForm = () => {
         document.getElementById('p-id').value = ''; document.getElementById('p-title').value = '';
         document.getElementById('p-price').value = ''; document.getElementById('p-desc').value = '';
         ['S', 'M', 'L', 'XL', 'FS'].forEach(size => {
-            const check = document.getElementById(`size-${size}-check`); const input = document.getElementById(`stock-${size}`);
-            if(check) check.checked = false; if(input) { input.value = ''; input.disabled = true; }
+            const check = document.getElementById(`size-${size}-check`);
+            if(check) check.checked = false; 
         });
+        document.getElementById('p-outofstock').checked = false; // Reset ស្ថានភាព
         document.getElementById('cover-preview-container').innerHTML = ''; coverFile = null;
         document.getElementById('detail-preview-container').innerHTML = ''; detailFiles = [];
         document.getElementById('save-btn').innerText = "Save Product"; document.getElementById('save-btn').disabled = false;
-    };
-
-    window.toggleStockInput = (size) => {
-        const checkbox = document.getElementById(`size-${size}-check`); const stockInput = document.getElementById(`stock-${size}`);
-        if(checkbox.checked) { stockInput.disabled = false; stockInput.focus(); } else { stockInput.disabled = true; stockInput.value = ""; }
     };
 
     window.previewCover = async (event) => {
@@ -1362,20 +1366,23 @@ if (currentConfig.bannerRatioDesktop) document.getElementById('cfg-banner-ratio-
         
         querySnapshot.forEach((doc) => {
           let p = doc.data(); p.id = doc.id; currentProducts.push(p);
-          let stockText = ""; let totalStock = 0;
-          if(p.inventory) {
-              let arr = [];
-              for (const [size, qty] of Object.entries(p.inventory)) { arr.push(`${size}(${qty})`); totalStock += qty; }
-              stockText = arr.join(', ');
-          }
-          let statusHtml = totalStock > 0 ? `<span style="color: var(--success); font-size:11px; font-weight:600; background: rgba(16, 185, 129, 0.1); padding: 4px 8px; border-radius: 4px;">In Stock (${totalStock})</span>` : `<span style="color: var(--danger); font-size:11px; font-weight:600; background: rgba(239, 68, 68, 0.1); padding: 4px 8px; border-radius: 4px;">Out of Stock</span>`;
+          
+          let sizesArr = p.sizes || (p.inventory ? Object.keys(p.inventory) : []);
+          let stockText = sizesArr.join(', ');
+          
+          // 🔴 កែតម្រូវត្រង់នេះ៖ បំប្លែងទៅជាប៊ូតុងចុច (Toggle Button)
+          let isOut = p.isOutOfStock === true;
+          let statusHtml = isOut ? 
+              `<button onclick="window.toggleQuickStock('${p.id}', true)" style="cursor:pointer; border:1px solid rgba(239, 68, 68, 0.3); color: var(--danger); font-size:11px; font-weight:600; background: rgba(239, 68, 68, 0.1); padding: 6px 10px; border-radius: 6px; transition: 0.2s;">🔴 Out of Stock</button>` : 
+              `<button onclick="window.toggleQuickStock('${p.id}', false)" style="cursor:pointer; border:1px solid rgba(16, 185, 129, 0.3); color: var(--success); font-size:11px; font-weight:600; background: rgba(16, 185, 129, 0.1); padding: 6px 10px; border-radius: 6px; transition: 0.2s;">🟢 In Stock</button>`;
+              
           let coverImg = (p.images && p.images.length > 0) ? p.images[0] : 'https://via.placeholder.com/40';
 
           html += `<tr>
               <td><img src="${coverImg}" class="item-img"></td>
-              <td><b style="font-size:14px;">${p.title}</b><br><span style="color:var(--gray); font-size:11px;">${stockText}</span></td>
+              <td><b style="font-size:14px;">${p.title}</b><br><span style="color:var(--gray); font-size:11px;">Sizes: ${stockText}</span></td>
               <td style="font-weight:600;">$${p.price}</td><td>${statusHtml}</td>
-              <td style="text-align: right; white-space: nowrap;">
+                                          <td style="text-align: right; white-space: nowrap;">
                 <div class="action-group">
                     <span class="btn-text" onclick="window.editProduct('${p.id}')">Edit</span>
                     <span class="btn-text danger" onclick="window.deleteProduct('${p.id}')">Del</span>
@@ -1403,6 +1410,32 @@ if (currentConfig.bannerRatioDesktop) document.getElementById('cfg-banner-ratio-
         document.getElementById('admin-table').innerHTML = html || '<tr><td colspan="5" style="text-align:center; padding:40px; color:var(--gray);">No products found.</td></tr>';
         document.getElementById('disc-items-list').innerHTML = discItemsHtml || '<div style="color:var(--gray); font-size: 13px; text-align: center; padding: 20px;">No products available in database.</div>';
       } catch (error) { console.error(error); }
+    };
+
+    // 🔴 មុខងារថ្មី៖ ចុចប្តូរស្តុកលឿនរហ័សពីក្នុងតារាង
+    window.toggleQuickStock = async (id, currentlyOut) => {
+        try {
+            // បើវាកំពុង Out of stock (true) -> យើងដូរវាទៅជា In Stock (false) វិញ
+            const newStatus = !currentlyOut; 
+            
+            await updateDoc(doc(db, "products", id), { 
+                isOutOfStock: newStatus 
+            });
+            
+            // បង្ហាញសារជោគជ័យ
+            if (newStatus) {
+                window.showAlert("Success", "បានបិទមិនឲ្យទិញ (Out of Stock)!", "success");
+            } else {
+                window.showAlert("Success", "បានបើកឲ្យទិញវិញ (In Stock)!", "success");
+            }
+            
+            // ទាញទិន្នន័យមកបង្ហាញក្នុងតារាងឡើងវិញភ្លាមៗ
+            window.loadProducts(); 
+            
+        } catch (error) {
+            console.error("Error toggling stock:", error);
+            window.showAlert("Error", "បរាជ័យក្នុងការប្តូរស្ថានភាព!", "error");
+        }
     };
 
     window.compressImage = (file) => {
@@ -1446,7 +1479,7 @@ if (currentConfig.bannerRatioDesktop) document.getElementById('cfg-banner-ratio-
         });
     };
 
-    window.saveProduct = async () => {
+window.saveProduct = async () => {
       const id = document.getElementById('p-id').value;
       const title = document.getElementById('p-title').value.trim();
       const price = Number(document.getElementById('p-price').value);
@@ -1455,13 +1488,17 @@ if (currentConfig.bannerRatioDesktop) document.getElementById('cfg-banner-ratio-
 
       if(!title || !price) return window.showAlert("Warning", "Please fill Name and Price!", "error");
       
-      let inventory = {};
+      // ចាប់យក Size ថ្មី
+      let selectedSizes = [];
       ['S', 'M', 'L', 'XL', 'FS'].forEach(size => {
           if(document.getElementById(`size-${size}-check`).checked) {
-              inventory[size] = Number(document.getElementById(`stock-${size}`).value) || 0;
+              selectedSizes.push(size);
           }
       });
-      if(Object.keys(inventory).length === 0) return window.showAlert("Warning", "Please select at least one size.", "error");
+      if(selectedSizes.length === 0) return window.showAlert("Warning", "Please select at least one size.", "error");
+      
+      // ចាប់យកតម្លៃ Out of Stock
+      const isOutOfStock = document.getElementById('p-outofstock').checked; 
 
       let finalImagesUrls = [];
       if(id) {
@@ -1489,16 +1526,26 @@ if (currentConfig.bannerRatioDesktop) document.getElementById('cfg-banner-ratio-
 
           saveBtn.innerText = "Saving to Database...";
 
-          const productData = { title: title, price: price, description: desc, images: finalImagesUrls, inventory: inventory };
+          // ប្តូរពីការបញ្ជូន inventory ទៅជា sizes និងបញ្ជូន isOutOfStock
+          const productData = { title: title, price: price, description: desc, images: finalImagesUrls, sizes: selectedSizes, isOutOfStock: isOutOfStock };
 
-          if(id) { await updateDoc(doc(db, "products", id), productData); window.showAlert("Success", "Product updated successfully!", "success"); } 
-          else { await addDoc(collection(db, "products"), productData); window.showAlert("Success", "Product added successfully!", "success"); }
+          if(id) { 
+              await updateDoc(doc(db, "products", id), productData); 
+              window.showAlert("Success", "Product updated successfully!", "success"); 
+          } 
+          else { 
+              await addDoc(collection(db, "products"), productData); 
+              window.showAlert("Success", "Product added successfully!", "success"); 
+          }
           
-          window.closeForm(); window.loadProducts(); 
+          window.closeForm(); 
+          window.loadProducts(); 
       } catch (error) { 
           console.error(error);
           window.showAlert("Error", "Error saving product! Check internet connection.", "error"); 
-          saveBtn.innerText = "Save Product"; saveBtn.disabled = false;
+      } finally {
+          saveBtn.innerText = "Save Product"; 
+          saveBtn.disabled = false;
       }
     };
 
@@ -1510,12 +1557,19 @@ if (currentConfig.bannerRatioDesktop) document.getElementById('cfg-banner-ratio-
         document.getElementById('p-id').value = p.id; document.getElementById('p-title').value = p.title;
         document.getElementById('p-price').value = p.price; document.getElementById('p-desc').value = p.description || '';
 
-        if(p.inventory) {
-            for (const [size, qty] of Object.entries(p.inventory)) {
-                const check = document.getElementById(`size-${size}-check`); const input = document.getElementById(`stock-${size}`);
-                if(check && input) { check.checked = true; input.disabled = false; input.value = qty; }
+     if(p.sizes && Array.isArray(p.sizes)) {
+            p.sizes.forEach(size => {
+                const check = document.getElementById(`size-${size}-check`);
+                if(check) check.checked = true;
+            });
+        } else if (p.inventory) { // ការពារទិន្នន័យចាស់ដែលធ្លាប់ Save ពីមុន
+            for (const size of Object.keys(p.inventory)) {
+                const check = document.getElementById(`size-${size}-check`);
+                if(check) check.checked = true;
             }
         }
+        document.getElementById('p-outofstock').checked = p.isOutOfStock === true; // លោតសញ្ញាធិកបើធ្លាប់ដាក់ Out of stock
+
 
         if(p.images && p.images.length > 0) {
             const coverContainer = document.getElementById('cover-preview-container');
