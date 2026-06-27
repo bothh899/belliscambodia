@@ -1651,7 +1651,7 @@ if(coords) finalAddress += ` | Maps: https://maps.google.com/?q=${coords}`;
             }
         };
 
-        window.getLocation = (e) => {
+ window.getLocation = (e) => {
             e.preventDefault();
             const status = document.getElementById('location-status');
             const coordInput = document.getElementById('buyer-coords');
@@ -1661,14 +1661,21 @@ if(coords) finalAddress += ` | Maps: https://maps.google.com/?q=${coords}`;
             } else {
                 status.innerText = "កំពុងស្វែងរកទីតាំងរបស់អ្នក...";
                 status.style.color = "var(--text-muted)";
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const lat = position.coords.latitude;
-                    const lng = position.coords.longitude;
-                    coordInput.value = `${lat},${lng}`;
-status.innerHTML = `✅ ចាប់ទីតាំងបានជោគជ័យ! <a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" style="color: #4caf50; text-decoration: underline;">View Map</a>`;
-                    status.innerText = "មិនអាចចាប់ទីតាំងបានទេ សូមពិនិត្យមើល Permission";
-                    status.style.color = "#ff4a4a";
-                });
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        // 🔴 ពេលចាប់ទីតាំងបានជោគជ័យ (Success Callback)
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        coordInput.value = `${lat},${lng}`;
+                        // ប្តូរទៅប្រើ Link ស្តង់ដាររបស់ Google Maps
+                        status.innerHTML = `✅ ចាប់ទីតាំងបានជោគជ័យ! <a href="https://maps.google.com/?q=${lat},${lng}" target="_blank" style="color: #4caf50; text-decoration: underline;">View Map</a>`;
+                    }, 
+                    (error) => {
+                        // 🔴 ពេលចាប់ទីតាំងមិនបាន ឬភ្ញៀវមិនព្រមឲ្យ (Error Callback)
+                        status.innerText = "មិនអាចចាប់ទីតាំងបានទេ សូមពិនិត្យមើល Permission";
+                        status.style.color = "#ff4a4a";
+                    }
+                );
             }
         };
 
