@@ -1915,39 +1915,70 @@ function listenToProducts() {
       // ==========================================
         // 🔴 មុខងារ Slider ទាញរូបពី Firebase 🔴
         // ==========================================
-        let slideInterval;
+      // ==========================================
+// 🔴 មុខងារ Slider ទាញរូបពី Firebase 🔴
+// ==========================================
+let slideInterval;
         
 window.renderDynamicBanners = (banners, intervalSec) => {
-            const timeMs = (intervalSec && intervalSec > 0) ? (intervalSec * 1000) : 3000;
-            const sliderEl = document.getElementById('main-hero-slider');
-            // ... (កូដផ្សេងៗរក្សាដដែល)
-            const updateDots = (index) => {
-                dots.forEach(d => d.classList.remove('active'));
-                if(dots[index]) dots[index].classList.add('active');
-            };
+    const sliderEl = document.getElementById('main-hero-slider');
+    const dotsEl = document.getElementById('main-hero-dots');
+    const heroSection = document.querySelector('.hero');
+    if(!sliderEl || !dotsEl || !heroSection) return;
+    
+    // បើ Admin លុបរូប Cover ចោលអស់ គឺលាក់ផ្ទាំងនេះពីវេបសាយភ្ញៀវតែម្តង
+    if(!banners || banners.length === 0) {
+        heroSection.style.display = 'none';
+        clearInterval(slideInterval);
+        return;
+    }
+    
+    heroSection.style.display = 'block'; // បង្ហាញមកវិញបើមានរូប
+    
+    // 1. បញ្ចូលរូបភាពទៅក្នុង HTML
+    sliderEl.innerHTML = banners.map((url, i) => `<img src="${url}" class="hero-slide" alt="Cover ${i+1}">`).join('');
+    
+    // 2. បញ្ចូលចំណុចអុចៗ
+    dotsEl.innerHTML = banners.map((_, i) => `<span class="dot ${i===0 ? 'active' : ''}"></span>`).join('');
+    
+    // 3. រៀបចំមុខងារលោតអូតូ
+    const dots = dotsEl.querySelectorAll('.dot');
+    let currentSlide = 0; // 🔴 នេះជាអថេរដែលបាត់កាលពីមុន ទើបធ្វើឱ្យ Error 🔴
+    const totalSlides = banners.length;
+    
+    clearInterval(slideInterval); // បិទម៉ោងចាស់សិនការពារកុំឱ្យលោតជាន់គ្នា
+    
+    if(totalSlides <= 1) return; // បើមានរូបតែ ១ មិនបាច់ឱ្យលោតទេ
+    
+    // កំណត់វិនាទីដែលបោះមកពី Admin (បើមិនដាក់ វាយក ៣ វិនាទីជាធំ)
+    const timeMs = (intervalSec && intervalSec > 0) ? (intervalSec * 1000) : 3000;
+    
+    const updateDots = (index) => {
+        dots.forEach(d => d.classList.remove('active'));
+        if(dots[index]) dots[index].classList.add('active');
+    };
 
-            const goToNextSlide = () => {
-                currentSlide++;
-                if (currentSlide >= totalSlides) currentSlide = 0;
-                sliderEl.scrollTo({ left: currentSlide * sliderEl.clientWidth, behavior: 'smooth' });
-                updateDots(currentSlide);
-            };
+    const goToNextSlide = () => {
+        currentSlide++;
+        if (currentSlide >= totalSlides) currentSlide = 0;
+        sliderEl.scrollTo({ left: currentSlide * sliderEl.clientWidth, behavior: 'smooth' });
+        updateDots(currentSlide);
+    };
 
-            const startSlider = () => { slideInterval = setInterval(goToNextSlide, timeMs); };
-            const stopSlider = () => { clearInterval(slideInterval); };
-            // ... (រក្សាដដែលដល់ចប់មុខងារ)
+    const startSlider = () => { slideInterval = setInterval(goToNextSlide, timeMs); };
+    const stopSlider = () => { clearInterval(slideInterval); };
 
+    startSlider();
+    
+    sliderEl.addEventListener('touchstart', stopSlider);
+    sliderEl.addEventListener('touchend', () => {
+        setTimeout(() => {
+            currentSlide = Math.round(sliderEl.scrollLeft / sliderEl.clientWidth);
+            updateDots(currentSlide);
             startSlider();
-            
-            sliderEl.addEventListener('touchstart', stopSlider);
-            sliderEl.addEventListener('touchend', () => {
-                setTimeout(() => {
-                    currentSlide = Math.round(sliderEl.scrollLeft / sliderEl.clientWidth);
-                    updateDots(currentSlide);
-                    startSlider();
-                }, 400); 
-            });
-        };
+        }, 400); 
+    });
+};
 
       window.nextImageFs = () => { 
             window.nextImage(); 
