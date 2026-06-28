@@ -644,7 +644,7 @@
     
                 <div class="form-section">
                     <h3>Delivery Information</h3>
-                    <p style="font-size: 12px; color: #888; margin-bottom: 15px;">We will provide to <span style="color: #ff0000; font-weight: 800;">J&T</span></p>
+                    <!-- <p style="font-size: 12px; color: #888; margin-bottom: 15px;">We will provide to <span style="color: #ff0000; font-weight: 800;">J&T</span></p> -->
                     <label class="form-label">Address: *</label>
                     <div class="input-group"><span class="input-icon">📍</span><input type="text" id="buyer-address" class="input-with-icon" placeholder="Ex: Toul Tompung"></div>
                     
@@ -2217,6 +2217,31 @@ window.renderDynamicBanners = (banners, intervalSec) => {
                 btn.innerHTML = '⌃ Hide Less';
             }
         };
+
+        // ==========================================
+        // 🔴 មុខងារ Auto-Refresh ពេលភ្ញៀវទុកវេបសាយចោលយូរ 🔴
+        // ==========================================
+        let lastLeaveTime = 0;
+        const REFRESH_THRESHOLD = 20 * 60 * 1000; // ២០ នាទី (គិតជាមិល្លីវិនាទី)
+
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                // ពេលភ្ញៀវចុចចេញពីវេបសាយ (អូសទៅមើល App ផ្សេង ឬបិទអេក្រង់)
+                // យើងកត់ត្រាម៉ោងទុក
+                lastLeaveTime = Date.now();
+            } else {
+                // ពេលភ្ញៀវបើកត្រលប់ចូលមកវេបសាយវិញ
+                if (lastLeaveTime > 0) {
+                    const timeAway = Date.now() - lastLeaveTime;
+                    
+                    // បើពេលវេលាដែលគាត់ចេញទៅ ធំជាង ឬស្មើ ២០ នាទី
+                    if (timeAway >= REFRESH_THRESHOLD) {
+                        // បង្ខំឲ្យទំព័រ Refresh ខ្លួនឯង ដើម្បីទាញទិន្នន័យថ្មី និងការពារការគាំង
+                        window.location.reload();
+                    }
+                }
+            }
+        });
 
     </script>
 </body>
