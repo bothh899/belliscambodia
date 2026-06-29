@@ -1377,9 +1377,9 @@ window.getCartModalHtml = () => {
                 const activePrice = dInfo.price;
                 let itemTotal = activePrice * item.qty; 
                 
-                let priceDisplay = dInfo.isDiscounted 
-                    ? `<span style="color:white;">$${itemTotal.toFixed(2)}</span> <span class="original-price" style="font-size: 11px;">$${(item.price * item.qty).toFixed(2)}</span>`
-                    : `<span style="color:white;">$${itemTotal.toFixed(2)}</span>`;
+let priceDisplay = dInfo.isDiscounted 
+                    ? `<span style="color:var(--text-main);">$${itemTotal.toFixed(2)}</span> <span class="original-price" style="font-size: 11px;">$${(item.price * item.qty).toFixed(2)}</span>`
+                    : `<span style="color:var(--text-main);">$${itemTotal.toFixed(2)}</span>`;
 
                 let sizeSelectorsHtml = '';
                 for (let k = 0; k < item.qty; k++) {
@@ -1387,15 +1387,15 @@ window.getCartModalHtml = () => {
                     let options = item.sizes.map(s => `<option value="${s}" ${s === currentSize ? 'selected' : ''}>Size ${s}</option>`).join('');
                     sizeSelectorsHtml += `
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                            <span style="font-size: 13px; color: #aaa;">Size អាវទី ${k + 1}:</span>
-                            <select class="modal-size-select" style="padding: 6px 10px; font-size: 13px; border-color: #333; background: #0a0a0a; border-radius: 6px; cursor: pointer;" onchange="window.updateIndividualSize(${index}, ${k}, this.value)">
+                            <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Size ទី ${k + 1}:</span>
+                            <select class="modal-size-select" style="padding: 6px 10px; font-size: 13px; cursor: pointer;" onchange="window.updateIndividualSize(${index}, ${k}, this.value)">
                                 ${options}
                             </select>
                         </div>`;
                 }
 
                 listHtml += `
-                    <div class="checkout-item-row" style="flex-direction: column; align-items: stretch; border-bottom: 1px solid #222; padding-bottom: 20px;">
+                    <div class="checkout-item-row" style="flex-direction: column; align-items: stretch; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
                         <div style="display: flex; gap: 15px;">
                             <img src="${item.imgUrl}" class="checkout-item-img">
                             <div style="display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1;">
@@ -1407,12 +1407,12 @@ window.getCartModalHtml = () => {
                             </div>
                         </div>
                         
-                        <div style="background: #151515; border: 1px solid #2a2a2a; border-radius: 8px; padding: 15px; margin-top: 15px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 1px dashed #333; padding-bottom: 12px;">
-                                <span style="font-size: 13px; color: #ccc;">ចំនួនអាវ (QTY)</span>
-                                <div class="modal-qty-box" style="background: #000; border-color: #333;">
+                        <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-top: 15px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 12px;">
+                                <span style="font-size: 13px; color: var(--text-muted); font-weight: 700;">ចំនួន (QTY)</span>
+                                <div class="modal-qty-box">
                                     <button class="modal-qty-btn" onclick="window.changeModalQty(${index}, -1)">−</button>
-                                    <span class="modal-qty-num" style="font-size: 14px; font-weight: bold; width: 30px; text-align: center;">${item.qty}</span>
+                                    <span class="modal-qty-num" style="font-size: 14px; font-weight: bold; width: 35px; text-align: center;">${item.qty}</span>
                                     <button class="modal-qty-btn" onclick="window.changeModalQty(${index}, 1)">+</button>
                                 </div>
                             </div>
@@ -1421,6 +1421,8 @@ window.getCartModalHtml = () => {
                             </div>
                         </div>
                     </div>`;
+
+              
             });
             listHtml += `</div>`;
             return listHtml;
@@ -1723,9 +1725,9 @@ window.openProduct = (id) => {
                 let itemTotal = activePrice * item.qty; 
                 subtotal += itemTotal;
                 
-                let priceDisplay = dInfo.isDiscounted 
-                    ? `<span style="color:white;">$${itemTotal.toFixed(2)}</span> <span class="original-price" style="font-size: 11px;">$${(item.price * item.qty).toFixed(2)}</span>`
-                    : `<span style="color:white;">$${itemTotal.toFixed(2)}</span>`;
+let priceDisplay = dInfo.isDiscounted 
+                    ? `<span style="color:var(--text-main);">$${itemTotal.toFixed(2)}</span> <span class="original-price" style="font-size: 11px;">$${(item.price * item.qty).toFixed(2)}</span>`
+                    : `<span style="color:var(--text-main);">$${itemTotal.toFixed(2)}</span>`;
 
                 let sizeSelectorsHtml = '';
                 for (let k = 0; k < item.qty; k++) {
@@ -1733,15 +1735,15 @@ window.openProduct = (id) => {
                     let options = item.sizes.map(s => `<option value="${s}" ${s === currentSize ? 'selected' : ''}>Size ${s}</option>`).join('');
                     sizeSelectorsHtml += `
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                            <span style="font-size: 13px; color: #aaa;">Size អាវទី ${k + 1}:</span>
-                            <select class="modal-size-select" style="padding: 6px 10px; font-size: 13px; border-color: #333; background: #0a0a0a; border-radius: 6px; cursor: pointer;" onchange="window.updateIndividualSize(${index}, ${k}, this.value)">
+                            <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Size ទី ${k + 1}:</span>
+                            <select class="modal-size-select" style="padding: 6px 10px; font-size: 13px; cursor: pointer;" onchange="window.updateIndividualSize(${index}, ${k}, this.value)">
                                 ${options}
                             </select>
                         </div>`;
                 }
 
                 checkoutItemsHtml += `
-                    <div class="checkout-item-row" style="flex-direction: column; align-items: stretch; border-bottom: 1px solid #222; padding-bottom: 20px;">
+                    <div class="checkout-item-row" style="flex-direction: column; align-items: stretch; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
                         <div style="display: flex; gap: 15px;">
                             <img src="${item.imgUrl}" class="checkout-item-img">
                             <div style="display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1;">
@@ -1752,12 +1754,12 @@ window.openProduct = (id) => {
                                 <span class="checkout-price-wrap" style="align-items: flex-start;">${priceDisplay}</span>
                             </div>
                         </div>
-                        <div style="background: #151515; border: 1px solid #2a2a2a; border-radius: 8px; padding: 15px; margin-top: 15px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 1px dashed #333; padding-bottom: 12px;">
-                                <span style="font-size: 13px; color: #ccc;">ចំនួនអាវ (QTY)</span>
-                                <div class="modal-qty-box" style="background: #000; border-color: #333;">
+                        <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-top: 15px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 12px;">
+                                <span style="font-size: 13px; color: var(--text-muted); font-weight: 700;">ចំនួន (QTY)</span>
+                                <div class="modal-qty-box">
                                     <button class="modal-qty-btn" onclick="window.changeModalQty(${index}, -1)">−</button>
-                                    <span class="modal-qty-num" style="font-size: 14px; font-weight: bold; width: 30px; text-align: center;">${item.qty}</span>
+                                    <span class="modal-qty-num" style="font-size: 14px; font-weight: bold; width: 35px; text-align: center;">${item.qty}</span>
                                     <button class="modal-qty-btn" onclick="window.changeModalQty(${index}, 1)">+</button>
                                 </div>
                             </div>
@@ -1766,7 +1768,7 @@ window.openProduct = (id) => {
                             </div>
                         </div>
                     </div>`;
-            });
+                });
             
             // គណនាការបញ្ចុះតម្លៃពី Promo
             promoDiscountAmount = 0;
@@ -1945,7 +1947,7 @@ if(coords) finalAddress += ` | Maps: https://maps.google.com/?q=${coords}`;
                                   (orderData.promoCodeUsed ? `🎟️ <b>Promo (${orderData.promoCodeUsed}):</b> -$${safeDiscountAmount.toFixed(2)}\n` : '') +
                                   `💰 <b>សរុប:</b> <b>$${safeTotal.toFixed(2)}</b>`;
 
-                    const workerURL = "https://idk-backend.vannvirakboth372.workers.dev";
+                    const workerURL = "https://bellis-telegram-bot.vannvirakboth372.workers.dev";
                     
                     // រៀបចំទិន្នន័យបញ្ជូនទៅ Worker ឱ្យស្គាល់ថាមួយណាជាអក្សរ មួយណាជារូបភាព
                     const payload = {
