@@ -354,58 +354,6 @@
             .history-item { display: flex; justify-content: space-between; font-size: 14px; color: var(--text-muted); margin-bottom: 10px; font-weight: 500;}
             .history-total { display: flex; justify-content: space-between; font-weight: 900; color: var(--text-main); margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px; font-size: 16px;}
 
-            /* 🔴 CSS សម្រាប់ប៊ូតុងជាប់កន្ទុយអក្សរ (ម៉ូតថ្មី ស្អាតជាងមុន) 🔴 */
-            .btn-detail-size-inline { 
-                display: inline-flex; 
-                align-items: center; 
-                gap: 5px; 
-                background: var(--bg-color); 
-                color: var(--accent); 
-                font-size: 12px; 
-                font-weight: 700; 
-                text-decoration: none; 
-                padding: 6px 12px; 
-                border-radius: 30px; 
-                border: 1px solid var(--border-color); 
-                margin-left: 8px; 
-                cursor: pointer; 
-                transition: all 0.3s ease; 
-                vertical-align: middle; 
-                box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-            }
-            
-            .btn-detail-size-inline:hover { 
-                background: var(--accent); 
-                color: white; 
-                border-color: var(--accent); 
-                transform: translateY(-2px); 
-                box-shadow: 0 4px 10px rgba(137, 107, 179, 0.2);
-            }
-            
-            .size-chart-container { 
-                display: none; 
-                margin-top: -15px; 
-                margin-bottom: 25px; 
-                transition: 0.3s; 
-                animation: fadeIn 0.4s ease; 
-            }      
-            
-            .size-chart-container.show { display: block; }
-            
-            .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-radius: 12px; border: 1px solid var(--border-color); box-shadow: 0 4px 15px rgba(0,0,0,0.02);}
-            .size-table { 
-                width: 100%; 
-                border-collapse: collapse; 
-                text-align: center; 
-                font-size: 13px; 
-                background: var(--surface-color); 
-                border-radius: 12px; 
-                overflow: hidden; 
-                margin-top: 0px; 
-            }        
-            .size-table th { background: var(--bg-color); color: var(--text-main); padding: 14px; font-weight: 800; border-bottom: 1px solid var(--border-color); font-size: 12px; text-transform: uppercase; white-space: nowrap; }
-            .size-table td { padding: 14px; color: var(--text-muted); border-bottom: 1px solid var(--border-color); white-space: nowrap; font-weight: 500;}
-            .size-table tr:last-child td { border-bottom: none; }
         }
     </style>
     </head>
@@ -562,44 +510,6 @@
                     </div>
                     
 <div class="detail-desc-box" id="detail-desc"></div>
-
-                   <div class="detail-desc-box" id="detail-desc"></div>
-                    
-                    <div id="size-chart-container" class="size-chart-container">
-                        <div class="table-responsive">
-                            <table class="size-table">
-                                <thead>
-                                    <tr>
-                                        <th>SIZE</th>
-                                        <th>HEIGHT (cm)</th>
-                                        <th>WEIGHT (kg)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>S</td>
-                                        <td>145-155</td>
-                                        <td>35-50 Kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>M</td>
-                                        <td>155-175</td>
-                                        <td>45-60 Kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>L</td>
-                                        <td>170-185</td>
-                                        <td>55-85 Kg</td>
-                                    </tr>
-                                    <tr>
-                                        <td>XL</td>
-                                        <td>Coming...</td>
-                                        <td>Coming...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
 
                     <div class="detail-action-row">
                         <button id="detail-add-btn" class="btn-add" onclick="window.toggleDetailCart(event)">👜 ADD TO BAG</button>
@@ -782,17 +692,21 @@ const firebaseConfig = {
 
         let productsDB = []; 
         let cartCount = 0;
-        let cartItems = JSON.parse(localStorage.getItem('idk_cart')) || []; 
+let cartItems = JSON.parse(localStorage.getItem('idk_cart')) || []; 
         
+        // សម្អាតកូដចាស់ៗដែលជាប់រឿង Size ចេញឱ្យអស់
         cartItems = cartItems.map(item => {
-            if (!item.selectedSizes || item.selectedSizes.length !== item.qty) {
-                item.selectedSizes = Array(item.qty).fill(item.size || (item.sizes && item.sizes[0]) || 'M');
-            }
-            return item;
+            return {
+                id: item.id,
+                title: item.title,
+                price: Number(item.price),
+                qty: item.qty || 1,
+                imgUrl: item.imgUrl
+            };
         });
-        let currentItem = { id: '', title: '', price: 0, sizes: [], selectedSizes: [], size: '', qty: 1, imgUrl: '' };
         
-        let currentImageArray = [];
+        let currentItem = { id: '', title: '', price: 0, qty: 1, imgUrl: '', isOutOfStock: false };
+                let currentImageArray = [];
         let currentImageIndex = 0;
 
         window.updateIndividualSize = (index, subIndex, newSize) => { 
@@ -1318,43 +1232,44 @@ let extra = `
             if(existingIndex > -1) {
                 cartItems.splice(existingIndex, 1);
             } else {
-                let defaultSize = p.sizes[0] || 'M';
-                cartItems.push({ 
-                    id: p.id, title: p.title, price: Number(p.price), sizes: p.sizes, 
-                    size: defaultSize, selectedSizes: [defaultSize], qty: 1, imgUrl: p.imgUrl 
+cartItems.push({ 
+                    id: p.id, title: p.title, price: Number(p.price), qty: 1, imgUrl: p.imgUrl 
                 });
-                window.triggerTooltip();
+                                window.triggerTooltip();
             }
             window.updateCartBadge();
         }
 
-        window.toggleDetailCart = (event) => {
+window.toggleDetailCart = (event) => {
             if(event) event.preventDefault();
             let existingIndex = cartItems.findIndex(item => item.id === currentItem.id);
             if(existingIndex > -1) {
                 cartItems.splice(existingIndex, 1);
             } else {
-                let defaultSize = currentItem.sizes[0] || 'M';
                 cartItems.push({ 
-                    ...currentItem, 
-                    selectedSizes: Array(currentItem.qty).fill(defaultSize) 
+                    id: currentItem.id, 
+                    title: currentItem.title, 
+                    price: Number(currentItem.price), 
+                    qty: 1, 
+                    imgUrl: currentItem.imgUrl 
                 });
                 window.triggerTooltip();
             }
             window.updateCartBadge();
-        }
+        };
 
- window.goToCheckout = (event) => {
+window.goToCheckout = (event) => {
             if(event) event.preventDefault();
-            // កត់ត្រាទុកថា ចូល Checkout មកពីទំព័រ Detail
             sessionStorage.setItem('idk_checkout_source', 'detail');
             
             let existingIndex = cartItems.findIndex(item => item.id === currentItem.id);
             if(existingIndex === -1) {
-                let defaultSize = currentItem.sizes[0] || 'M';
                 cartItems.push({ 
-                    ...currentItem, 
-                    selectedSizes: Array(currentItem.qty).fill(defaultSize) 
+                    id: currentItem.id, 
+                    title: currentItem.title, 
+                    price: Number(currentItem.price), 
+                    qty: 1, 
+                    imgUrl: currentItem.imgUrl 
                 });
                 window.updateCartBadge();
             }
@@ -1384,20 +1299,7 @@ let priceDisplay = dInfo.isDiscounted
                     ? `<span style="color:var(--text-main);">$${itemTotal.toFixed(2)}</span> <span class="original-price" style="font-size: 11px;">$${(item.price * item.qty).toFixed(2)}</span>`
                     : `<span style="color:var(--text-main);">$${itemTotal.toFixed(2)}</span>`;
 
-                let sizeSelectorsHtml = '';
-                for (let k = 0; k < item.qty; k++) {
-                    let currentSize = item.selectedSizes[k];
-                    let options = item.sizes.map(s => `<option value="${s}" ${s === currentSize ? 'selected' : ''}>Size ${s}</option>`).join('');
-                    sizeSelectorsHtml += `
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                            <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Size ទី ${k + 1}:</span>
-                            <select class="modal-size-select" style="padding: 6px 10px; font-size: 13px; cursor: pointer;" onchange="window.updateIndividualSize(${index}, ${k}, this.value)">
-                                ${options}
-                            </select>
-                        </div>`;
-                }
-
-                listHtml += `
+listHtml += `
                     <div class="checkout-item-row" style="flex-direction: column; align-items: stretch; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
                         <div style="display: flex; gap: 15px;">
                             <img src="${item.imgUrl}" class="checkout-item-img">
@@ -1411,7 +1313,7 @@ let priceDisplay = dInfo.isDiscounted
                         </div>
                         
                         <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-top: 15px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 12px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-size: 13px; color: var(--text-muted); font-weight: 700;">ចំនួន (QTY)</span>
                                 <div class="modal-qty-box">
                                     <button class="modal-qty-btn" onclick="window.changeModalQty(${index}, -1)">−</button>
@@ -1419,36 +1321,19 @@ let priceDisplay = dInfo.isDiscounted
                                     <button class="modal-qty-btn" onclick="window.changeModalQty(${index}, 1)">+</button>
                                 </div>
                             </div>
-                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                ${sizeSelectorsHtml}
-                            </div>
                         </div>
                     </div>`;
-
               
             });
             listHtml += `</div>`;
             return listHtml;
         }
 
-        window.updateIndividualSize = (index, subIndex, newSize) => { 
-            cartItems[index].selectedSizes[subIndex] = newSize; 
-            window.saveCartLocally(); 
-            window.refreshCartUI(); 
-        }
-        
-        window.changeModalQty = (index, amount) => {
+  window.changeModalQty = (index, amount) => {
             let item = cartItems[index];
             let newQty = item.qty + amount; 
             if(newQty < 1) return; 
             item.qty = newQty;
-            
-            if (amount > 0) {
-                let lastSize = item.selectedSizes[item.selectedSizes.length - 1] || item.sizes[0];
-                item.selectedSizes.push(lastSize);
-            } else {
-                item.selectedSizes.pop(); 
-            }
             
             window.updateCartBadge();
             window.refreshCartUI();
@@ -1588,8 +1473,8 @@ let priceDisplay = dInfo.isDiscounted
                     else if(o.status.includes('Pending')) { statusColor = "rgba(255, 170, 0, 0.1)"; statusText = `<span style="color:#ffaa00;">${o.status}</span>`; }
                     else if(o.status.includes('Shipped')) { statusColor = "rgba(0, 191, 255, 0.1)"; statusText = `<span style="color:#00bfff;">${o.status}</span>`; }
                     
-                    let itemsHtml = o.items.map(i => `<div class="history-item"><span>${i.qty}x ${i.title} (${i.size})</span><span style="color:white;">$${(i.price * i.qty).toFixed(2)}</span></div>`).join('');
-                    
+let itemsHtml = o.items.map(i => `<div class="history-item"><span>${i.qty}x ${i.title}</span><span style="color:white;">$${(i.price * i.qty).toFixed(2)}</span></div>`).join('');
+
                     html += `
                         <div class="history-card">
                             <div class="history-header">
@@ -1633,23 +1518,10 @@ window.openProduct = (id) => {
             document.getElementById('detail-title').innerText = currentItem.title; 
             window.updateDetailPrice();
             
-            // 🔴 កូដថ្មី៖ បម្លែង Enter (\n) ទៅជា <br> រួចតភ្ជាប់ប៊ូតុងនៅចុងកន្ទុយអត្ថបទ
+    // បម្លែង Enter (\n) ទៅជា <br> សម្រាប់អត្ថបទពិពណ៌នា
             let formattedDesc = p.description ? p.description.replace(/\n/g, '<br>') : "";
-            let btnHtml = ' <span id="btn-toggle-size" class="btn-detail-size-inline" onclick="window.toggleSizeChart()">📏 Detail Size</span>';
-            document.getElementById('detail-desc').innerHTML = formattedDesc + btnHtml;
-            
-            // Reset Size Chart ឲ្យបិទរាល់ពេលបើកទំនិញថ្មី
-            const sizeContainer = document.getElementById('size-chart-container');
-            if (sizeContainer) sizeContainer.classList.remove('show');
-            
-            // ... (រក្សាកូដចាស់ៗបន្ទាប់ពីនេះទុកដដែល)
+            document.getElementById('detail-desc').innerHTML = formattedDesc;
 
-            // 🔴 កូដថ្មី៖ Reset ប៊ូតុង Detail Size ឲ្យលាក់វិញរាល់ពេលបើកទំនិញថ្មី
-            const sizeBtn = document.getElementById('btn-toggle-size');
-            if (sizeContainer && sizeBtn) {
-                sizeContainer.classList.remove('show');
-                sizeBtn.innerHTML = '📏 Detail Size';
-            }
 
             currentImageArray = p.imagesArray && p.imagesArray.length > 0 ? p.imagesArray : [currentItem.imgUrl]; 
             currentImageIndex = 0; 
@@ -1722,7 +1594,7 @@ window.openProduct = (id) => {
             if(cartItems.length === 0) { document.getElementById('checkout-total').innerText = "$0.00"; document.getElementById('checkout-product-block').style.display = 'none'; return; }
             let checkoutItemsHtml = ''; let subtotal = 0;
             
-            cartItems.forEach((item, index) => {
+cartItems.forEach((item, index) => {
                 const dInfo = window.getDiscountInfo(item.id, item.price);
                 const activePrice = dInfo.price;
                 let itemTotal = activePrice * item.qty; 
@@ -1732,23 +1604,11 @@ let priceDisplay = dInfo.isDiscounted
                     ? `<span style="color:var(--text-main);">$${itemTotal.toFixed(2)}</span> <span class="original-price" style="font-size: 11px;">$${(item.price * item.qty).toFixed(2)}</span>`
                     : `<span style="color:var(--text-main);">$${itemTotal.toFixed(2)}</span>`;
 
-                let sizeSelectorsHtml = '';
-                for (let k = 0; k < item.qty; k++) {
-                    let currentSize = item.selectedSizes[k];
-                    let options = item.sizes.map(s => `<option value="${s}" ${s === currentSize ? 'selected' : ''}>Size ${s}</option>`).join('');
-                    sizeSelectorsHtml += `
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                            <span style="font-size: 13px; color: var(--text-muted); font-weight: 600;">Size ទី ${k + 1}:</span>
-                            <select class="modal-size-select" style="padding: 6px 10px; font-size: 13px; cursor: pointer;" onchange="window.updateIndividualSize(${index}, ${k}, this.value)">
-                                ${options}
-                            </select>
-                        </div>`;
-                }
-
-                checkoutItemsHtml += `
+// ដោះស្រាយកំហុសនៅត្រង់នេះ (ប្តូរពី listHtml ទៅ checkoutItemsHtml)
+checkoutItemsHtml += `
                     <div class="checkout-item-row" style="flex-direction: column; align-items: stretch; border-bottom: 1px solid var(--border-color); padding-bottom: 20px;">
                         <div style="display: flex; gap: 15px;">
-                            <img src="${item.imgUrl}" class="checkout-item-img">
+                                                        <img src="${item.imgUrl}" class="checkout-item-img">
                             <div style="display: flex; flex-direction: column; justify-content: space-between; flex-grow: 1;">
                                 <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                                     <span class="checkout-item-title" style="font-size: 15px;">${item.title}</span>
@@ -1757,17 +1617,15 @@ let priceDisplay = dInfo.isDiscounted
                                 <span class="checkout-price-wrap" style="align-items: flex-start;">${priceDisplay}</span>
                             </div>
                         </div>
+                        
                         <div style="background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 12px; padding: 15px; margin-top: 15px;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 12px; border-bottom: 1px dashed var(--border-color); padding-bottom: 12px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
                                 <span style="font-size: 13px; color: var(--text-muted); font-weight: 700;">ចំនួន (QTY)</span>
                                 <div class="modal-qty-box">
                                     <button class="modal-qty-btn" onclick="window.changeModalQty(${index}, -1)">−</button>
                                     <span class="modal-qty-num" style="font-size: 14px; font-weight: bold; width: 35px; text-align: center;">${item.qty}</span>
                                     <button class="modal-qty-btn" onclick="window.changeModalQty(${index}, 1)">+</button>
                                 </div>
-                            </div>
-                            <div style="display: flex; flex-direction: column; gap: 10px;">
-                                ${sizeSelectorsHtml}
                             </div>
                         </div>
                     </div>`;
@@ -1827,14 +1685,12 @@ if(coords) finalAddress += ` | Maps: https://maps.google.com/?q=${coords}`;
             let subtotal = 0;
             let finalItems = [];
             
-            cartItems.forEach(item => {
+        cartItems.forEach(item => {
                 const dInfo = window.getDiscountInfo(item.id, item.price);
                 const activePrice = dInfo.price;
                 subtotal += activePrice * item.qty;
                 
-                let sizeCounts = {};
-                item.selectedSizes.forEach(s => { sizeCounts[s] = (sizeCounts[s] || 0) + 1; });
-                Object.keys(sizeCounts).forEach(s => { finalItems.push({ title: item.title, size: s, qty: sizeCounts[s], price: activePrice }); });
+                finalItems.push({ title: item.title, qty: item.qty, price: activePrice });
             });
 
             // ការគណនាមាន Promo 
@@ -1935,12 +1791,12 @@ if(coords) finalAddress += ` | Maps: https://maps.google.com/?q=${coords}`;
                 const safeTotal = orderData.total || 0;
 
                 // 🔴 4. បាញ់សារចូល Telegram Group ជាទម្រង់រូបភាព (Photo Caption) 🔴
-                try {
-                    let itemsText = orderData.items.map(i => `▫️ ${i.title} (Size: ${i.size}) <b>x${i.qty}</b>`).join('\n');
+try {
+                    let itemsText = orderData.items.map(i => `▫️ ${i.title} <b>x${i.qty}</b>`).join('\n');
                     
                     // បានដក "ស្ថានភាព" ចេញតាមការស្នើសុំ
                     let tgMessage = `🚨 <b>ការកុម្ម៉ង់ថ្មី (New Order)</b> 🚨\n\n` +
-                                  `🧾 <b>លេខកូដ:</b> #${orderData.orderId}\n` +
+                                                      `🧾 <b>លេខកូដ:</b> #${orderData.orderId}\n` +
                                   `👤 <b>អតិថិជន:</b> ${orderData.customer.name}\n` +
                                   `📞 <b>ទូរស័ព្ទ:</b> <code>${orderData.customer.phone}</code>\n` +
                                   `📍 <b>ទីតាំង:</b> ${orderData.customer.address}\n` +
@@ -1991,11 +1847,11 @@ if(coords) finalAddress += ` | Maps: https://maps.google.com/?q=${coords}`;
                 // 6. បង្ហាញវិក្កយបត្រនៅលើអេក្រង់ (UI Invoice)
                 let itemsHtml = orderData.items.map(item => `
                     <div style="display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; border-bottom: 1px dashed #333; padding-bottom: 8px;">
-                        <div style="text-align: left; width: 70%; color: #ccc;">
+<div style="text-align: left; width: 70%; color: #ccc;">
                             <b style="color: white;">${item.title}</b> <br>
-                            <span style="color: #888; font-size: 11px;">Size: ${item.size} | Qty: ${item.qty}</span>
+                            <span style="color: #888; font-size: 11px;">Qty: ${item.qty}</span>
                         </div>
-                        <div style="text-align: right; width: 30%; color: white; font-weight: bold;">
+                                                <div style="text-align: right; width: 30%; color: white; font-weight: bold;">
                             $${(item.price * item.qty).toFixed(2)}
                         </div>
                     </div>
@@ -2070,18 +1926,15 @@ if(coords) finalAddress += ` | Maps: https://maps.google.com/?q=${coords}`;
             let subtotal = 0;
             let finalItems = [];
             
-            cartItems.forEach(item => {
+         cartItems.forEach(item => {
                 const dInfo = window.getDiscountInfo(item.id, item.price);
                 const activePrice = dInfo.price;
                 subtotal += activePrice * item.qty;
                 
-                let sizeCounts = {};
-                item.selectedSizes.forEach(s => { sizeCounts[s] = (sizeCounts[s] || 0) + 1; });
-                
-                Object.keys(sizeCounts).forEach(s => {
-                    finalItems.push({ title: item.title, size: s, qty: sizeCounts[s], price: activePrice });
-                });
+                // រុញទិន្នន័យចូលដោយគ្មាន Size ដើម្បីកុំឱ្យកូដគាំង
+                finalItems.push({ title: item.title, qty: item.qty, price: activePrice });
             });
+            
 
             const orderID = "ORD-" + Math.floor(1000 + Math.random() * 9000);
             const orderData = { 
@@ -2233,19 +2086,7 @@ window.renderDynamicBanners = (banners, intervalSec) => {
             document.getElementById('fs-img').src = currentImageArray[currentImageIndex]; 
         }
 
-// 🔴 កូដថ្មី៖ មុខងារសម្រាប់ចុចលាត ឬលាក់ Size Chart
-    window.toggleSizeChart = () => {
-            const container = document.getElementById('size-chart-container');
-            const btn = document.getElementById('btn-toggle-size');
-            
-            if (container.classList.contains('show')) {
-                container.classList.remove('show');
-                btn.innerHTML = '📏 Detail Size';
-            } else {
-                container.classList.add('show');
-                btn.innerHTML = '⌃ Hide Less';
-            }
-        };
+
 
         // ==========================================
         // 🔴 មុខងារ Auto-Refresh ពេលភ្ញៀវទុកវេបសាយចោលយូរ 🔴
